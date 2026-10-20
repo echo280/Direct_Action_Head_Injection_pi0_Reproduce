@@ -102,3 +102,5 @@ runs/env/openpi/bin/python scripts/package_results.py
 - 完整来源：`UPSTREAM.json`；对上游 6 个文件的修改：`docs/openpi_changes.patch`。
 - 上游 OpenPI 原始 Apache 2.0 和 Gemma 许可证保留在 `openpi/`；论文源文件属于原作者。
 - 阅读笔记见 `papers/reading_notes_v2.md`，实现选择与论文未报告内容见 [差异清单](docs/reproduction_spec.md)。
+
+论文 PDF 和图像附件保留本地，不提交代码仓库。完整论文见 https://arxiv.org/pdf/2606.27663v2 ，完整源码见 https://arxiv.org/src/2606.27663v2 。训练代码不依赖论文图像文件。

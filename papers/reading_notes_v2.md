@@ -465,7 +465,7 @@ GR00T + Ours 仍有两个 0/10：
 | 真机汇总/每任务结果 | [real summary](arXiv-2606.27663v2/assets/tables/real_world_experiment.tex)、[per-task results](arXiv-2606.27663v2/sections/appendix/assets/tables/real_world_experiment_table.tex) |
 | 两种 0/10 失败分析 | [qualitative_results.tex](arXiv-2606.27663v2/sections/appendix/qualitative_results.tex) |
 | 作者自述边界 | [discussion_and_limitations.tex](arXiv-2606.27663v2/sections/discussion_and_limitations.tex) |
-| v2 原始管线图 | [overall_pipeline_fig.pdf](arXiv-2606.27663v2/assets/figures/overall_pipeline_fig.pdf) |
-| v2 原始真机任务图 | [real_world_task_fig.pdf](arXiv-2606.27663v2/sections/appendix/assets/figures/real_world_task_fig.pdf) |
+| v2 原始管线图 | [overall_pipeline_fig.pdf](https://arxiv.org/pdf/2606.27663v2) |
+| v2 原始真机任务图 | [real_world_task_fig.pdf](https://arxiv.org/pdf/2606.27663v2) |
 
 后续继续本项目时，应优先读取本笔记和对应原始附录；任何代码层面的确定结论，仍须对照实际采用的基座代码和官方实现验证。
