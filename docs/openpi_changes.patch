@@ -1,0 +1,131 @@
+--- a/src/openpi/models/pi0_config.py
++++ b/src/openpi/models/pi0_config.py
+@@ -29,6 +29,7 @@
+     # - the state input is part of the discrete language tokens rather than a continuous input that is part of the suffix
+     # - the action expert uses adaRMSNorm to inject the flow matching timestep
+     pi05: bool = False
++    spatial_conditioning: bool = False
+     # This config option is not used directly by the model, but it is read by the ModelTransformFactory.
+     discrete_state_input: bool = None  # type: ignore
+ 
+@@ -77,6 +78,8 @@
+                     "left_wrist_0_rgb": image_mask_spec,
+                     "right_wrist_0_rgb": image_mask_spec,
+                 },
++                spatial_displacement=(jax.ShapeDtypeStruct([batch_size, 3], jnp.float32)
++                                      if self.spatial_conditioning else None),
+                 state=jax.ShapeDtypeStruct([batch_size, self.action_dim], jnp.float32),
+                 tokenized_prompt=jax.ShapeDtypeStruct([batch_size, self.max_token_len], jnp.int32),
+                 tokenized_prompt_mask=jax.ShapeDtypeStruct([batch_size, self.max_token_len], bool),
+--- a/src/openpi/models/model.py
++++ b/src/openpi/models/model.py
+@@ -93,6 +93,7 @@
+     image_masks: dict[str, at.Bool[ArrayT, "*b"]]
+     # Low-dimensional robot state.
+     state: at.Float[ArrayT, "*b s"]
++    spatial_displacement: at.Float[ArrayT, "*b 3"] | None = None
+ 
+     # Tokenized prompt.
+     tokenized_prompt: at.Int[ArrayT, "*b l"] | None = None
+@@ -122,6 +123,7 @@
+             images=data["image"],
+             image_masks=data["image_mask"],
+             state=data["state"],
++            spatial_displacement=data.get("spatial_displacement"),
+             tokenized_prompt=data.get("tokenized_prompt"),
+             tokenized_prompt_mask=data.get("tokenized_prompt_mask"),
+             token_ar_mask=data.get("token_ar_mask"),
+@@ -201,6 +203,7 @@
+         images=out_images,
+         image_masks=out_masks,
+         state=observation.state,
++        spatial_displacement=observation.spatial_displacement,
+         tokenized_prompt=observation.tokenized_prompt,
+         tokenized_prompt_mask=observation.tokenized_prompt_mask,
+         token_ar_mask=observation.token_ar_mask,
+--- a/src/openpi/models/pi0.py
++++ b/src/openpi/models/pi0.py
+@@ -67,6 +67,9 @@
+     def __init__(self, config: pi0_config.Pi0Config, rngs: nnx.Rngs):
+         super().__init__(config.action_dim, config.action_horizon, config.max_token_len)
+         self.pi05 = config.pi05
++        self.spatial_conditioning = config.spatial_conditioning
++        if self.spatial_conditioning and not self.pi05:
++            raise ValueError("Spatial conditioning in this package requires pi05=True")
+         paligemma_config = _gemma.get_config(config.paligemma_variant)
+         action_expert_config = _gemma.get_config(config.action_expert_variant)
+         # TODO: rewrite gemma in NNX. For now, use bridge.
+@@ -98,6 +101,9 @@
+             self.action_time_mlp_in = nnx.Linear(2 * action_expert_config.width, action_expert_config.width, rngs=rngs)
+             self.action_time_mlp_out = nnx.Linear(action_expert_config.width, action_expert_config.width, rngs=rngs)
+         self.action_out_proj = nnx.Linear(action_expert_config.width, config.action_dim, rngs=rngs)
++        if self.spatial_conditioning:
++            from openpi.spatial.mlp import SpatialMLP
++            self.spatial_mlp = SpatialMLP(action_expert_config.width, rngs=rngs)
+ 
+         # This attribute gets automatically set by model.train() and model.eval().
+         self.deterministic = True
+@@ -166,6 +172,11 @@
+             time_emb = self.time_mlp_out(time_emb)
+             time_emb = nnx.swish(time_emb)
+             action_expert_tokens = action_tokens
++            if self.spatial_conditioning:
++                if obs.spatial_displacement is None:
++                    raise ValueError("Missing metric spatial_displacement; refusing zero fallback")
++                spatial = self.spatial_mlp(obs.spatial_displacement)
++                time_emb = time_emb + spatial.astype(time_emb.dtype)
+             adarms_cond = time_emb
+         else:
+             # mix timestep + action information using an MLP (no adaRMS)
+--- a/src/openpi/training/data_loader.py
++++ b/src/openpi/training/data_loader.py
+@@ -56,7 +56,12 @@
+         self._transform = _transforms.compose(transforms)
+ 
+     def __getitem__(self, index: SupportsIndex) -> T_co:
+-        return self._transform(self._dataset[index])
++        sample = self._dataset[index]
++        spatial = sample.get("spatial_displacement")
++        result = self._transform(sample)
++        if spatial is not None:
++            result["spatial_displacement"] = spatial
++        return result
+ 
+     def __len__(self) -> int:
+         return len(self._dataset)
+@@ -144,6 +149,13 @@
+             key: [t / dataset_meta.fps for t in range(action_horizon)] for key in data_config.action_sequence_keys
+         },
+     )
++
++    if getattr(model_config, "spatial_conditioning", False):
++        from openpi.spatial.cache import GeometryDataset
++        cache_path = os.environ.get("PI05_GEOMETRY_CACHE")
++        if not cache_path:
++            raise ValueError("PI05_GEOMETRY_CACHE is required for spatial training")
++        dataset = GeometryDataset(dataset, cache_path, data_config.repo_id)
+ 
+     if data_config.prompt_from_task:
+         dataset = TransformedDataset(dataset, [_transforms.PromptFromLeRobotTask(dataset_meta.tasks)])
+--- a/src/openpi/policies/libero_policy.py
++++ b/src/openpi/policies/libero_policy.py
+@@ -80,6 +80,8 @@
+         if "prompt" in data:
+             inputs["prompt"] = data["prompt"]
+ 
++        if "spatial_displacement" in data:
++            inputs["spatial_displacement"] = np.asarray(data["spatial_displacement"], dtype=np.float32)
+         return inputs
+ 
+ 
+--- a/src/openpi/training/weight_loaders.py
++++ b/src/openpi/training/weight_loaders.py
+@@ -51,7 +51,7 @@
+         # We are loading np.ndarray and relying on the training code to properly convert and shard the params.
+         loaded_params = _model.restore_params(download.maybe_download(self.params_path), restore_type=np.ndarray)
+         # Add all missing LoRA weights.
+-        return _merge_params(loaded_params, params, missing_regex=".*lora.*")
++        return _merge_params(loaded_params, params, missing_regex="(.*lora.*|spatial_mlp/.*)")
+ 
+ 
+ @dataclasses.dataclass(frozen=True)

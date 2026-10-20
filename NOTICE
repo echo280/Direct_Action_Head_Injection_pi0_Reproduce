@@ -1,0 +1,3 @@
+Includes OpenPI from Physical Intelligence, Apache License 2.0.
+Independent modifications for arXiv:2606.27663v2 are described in docs/openpi_changes.patch.
+Gemma terms are retained in openpi/LICENSE_GEMMA.txt. Paper source remains attributed to its original authors.

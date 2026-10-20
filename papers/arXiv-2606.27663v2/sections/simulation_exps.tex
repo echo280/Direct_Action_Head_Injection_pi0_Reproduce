@@ -1,0 +1,68 @@
+\section{Simulation Experiments}
+\label{sec:sim_exp}
+\subsection{Simulation Experimental Setup}
+\noindent\textbf{Benchmarks.} We evaluate on LIBERO~\cite{libero} and LIBERO-PRO~\cite{zhou2025liberopro}. From LIBERO, we adopt two pick-and-place suites, LIBERO-Object and LIBERO-Spatial. LIBERO-PRO extends LIBERO with two test-time perturbations: Task Perturbation replaces the target object with a plausible alternative present in the scene, testing whether the policy follows the test-time instruction rather than replaying memorized task–trajectory associations; Position Perturbation alters initial object placements to evaluate spatial generalization. We run 50 rollout trials per task, totaling 500 trials per suite, and report average success rates.
+
+\noindent\textbf{Training Data.}
+We augment LIBERO-Object and LIBERO-Spatial with 49 additional pick-and-place tasks from LIBERO-90, yielding 69 tasks in total. The original LIBERO suites provide unimodal trajectories~\cite{zhou2025liberopro} and minimally randomized initial states, under which baselines trivially fail to generalize~\cite{steerablepolicy}. Scaling to 69 tasks increases diversity and ensures that any observed OOD collapse reflects a structural limitation rather than a data-side shortcoming. In Sec.~\ref{sec:tasks_scaling}, we also evaluate models trained on the original 20-task setup. The 49 tasks from LIBERO-90 are listed in App.~\ref{supp:sec:subsec:training_tasks}.
+
+\noindent\textbf{Grounding Source and Sub-Goal Switching.}
+We obtain 2D target points by sampling from simulator-provided segmentation masks of the target object or placement region. Both during training and at inference, the 3D target point is obtained by lifting a 2D pixel from the third-person view image. For more details please refer to App.~\ref{supp:sec:subsec:grounding-source}. We decompose each pick-and-place task into reach-to-grasp and transport-to-place sub-goals. Inspired by prior work~\cite{deng2025graspvla}, we record the target object's z-coordinate in 3D space at episode start and consider the object as grasped once it rises by more than 1 cm. Upon grasping, we switch the active target from the object to the placement region.
+
+\noindent\textbf{Base Models.}
+For the main result in Sec.~\ref{sec:libero_and_libero_pro}, we use two pre-trained VLA backbones:  $\pi_{0.5}$~\cite{pi05} and GR00T-N1.6~\cite{gr00tn1_2025}. For each backbone we fine-tune two variants on our 69-task suite that differ only in whether our method is applied. All subsequent experiments are conducted on GR00T-N1.6. Full training details are provided in App.~\ref{supp:sec:subsec:sim-training-details}.
+
+% We compare against two categories of baselines. The first comprises external models evaluated via official checkpoints, namely OpenVLA~\cite{kim2024openvla}, $\pi_0$~\cite{pi0}, and the reasoning-based MolmoAct~\cite{molmoact2025}. The second is a controlled comparison using $\pi_{0.5}$~\cite{pi05} and GR00T-N1.6~\cite{gr00tn1_2025} trained on our 69-task suite, evaluated both with and without our spatial conditioning. We execute 50 rollout trials per task and report the average success rate. Notably, all evaluated models achieve strong in-distribution success. This confirms that their subsequent OOD collapse stems from a fundamental bottleneck in generalization, rather than insufficient model capacity~\cite{zhou2025liberopro}.
+
+\subsection{Experimental Results on LIBERO and LIBERO-PRO}
+\label{sec:libero_and_libero_pro}
+\input{assets/tables/main}
+\input{assets/tables/controlled_experiment}
+Tab.~\ref{tab:libero_and_libero_pro} reports results of our method on LIBERO and LIBERO-PRO. Alongside our two controlled-comparison backbones, we include three external models as reference points: OpenVLA~\cite{kim2024openvla}, $\pi_{0}$~\cite{pi0}, and the reasoning-based MolmoAct~\cite{molmoact2025}. Although all baselines achieve strong in-distribution success, performance collapses under perturbation: OpenVLA and $\pi_{0}$ drop to $24.1$ and $32.2$ points under Task Perturbation, and to $0.0$ and $5.9$ points under Position Perturbation; even $\pi_{0.5}$ and GR00T-N1.6, trained on the same data as our method, only reach $37.3$ and $31.2$ points under Task Perturbation, and $47.0$ and $28.1$ points under Position Perturbation. This indicates that brittleness to spatial and task shifts is a widespread failure mode of current VLAs. Adding our method reverses this trend. On $\pi_{0.5}$, success rates rise to $\textbf{75.9}$ and $\textbf{72.2}$ points under Task and Position Perturbation; on GR00T-N1.6, success rates rise to $\textbf{77.5}$ and $\textbf{60.2}$ points. Consistent improvements across two backbones demonstrate that our method is backbone-agnostic across VLAs with diffusion-based action heads. 
+
+We further investigate whether the gains simply stem from incorporating 3D information by comparing against FALCON~\cite{falcon}, which incorporates dense 3D features into the action head. Trained under our 69-task setting, FALCON shows limited generalization under perturbations, particularly under Position Perturbation. We hypothesize that dense 3D features make the policy more prone to overfitting: the 3D features shift under position perturbation, and the policy fails to generalize to this. In contrast, our grounding-aware 3D representations focus on task-relevant spatial information, leading to better generalization. These results suggest that the gains come not merely from depth information, but from how 3D representations are grounded for action prediction.
+
+% We re-emphasize that these gains come from adding only a 2-layer MLP, with no changes to the VLA backbone or training objective, while leaving in-distribution performance intact.
+
+\subsection{Disentangling Grounding Representation and Injection}
+\label{sec:grounding_rep_inj}
+
+The results in Sec.~\ref{sec:libero_and_libero_pro} conflate two design choices: representing the grounding signal in 3D and injecting it directly into the action head. To isolate the contribution of each, we design a controlled comparison spanning these two axes. All variants receive the \emph{identical} oracle 2D target point and differ only in how this signal is represented and injected: \textbf{2D via Text Prompt} appends the 2D point coordinates to the text prompt; \textbf{2D via Visual Prompt} overlays a marker on the input image; \textbf{2D via AdaLN} encodes the tuple $(x_t, y_t,\, x_t - x_g,\, y_t - y_g)$ via an MLP and injects it through AdaLN, where $(x_t, y_t)$ is the target point and $(x_g, y_g)$ is the 2D image projection of the gripper; \textbf{3D via Text Prompt} appends the lifted 3D coordinates to the text prompt; and \textbf{3D via AdaLN (Ours)} is our method. Full implementation details are provided in App.~\ref{supp:sec:subsec:grounding_variants}. Results are reported in Tab.~\ref{tab:controlled_experiment}.
+
+\textbf{2D grounding signals are fundamentally limited regardless of injection mechanism.} All three 2D variants yield slight gains over the baseline, and even 2D via AdaLN—which adopts the same injection mechanism as ours—still falls noticeably short. Since action prediction operates in 3D physical space, a 2D signal forces the policy to internally learn the 2D-to-3D mapping—a burden the VLA struggles to absorb regardless of how the 2D signal is conveyed. Supplying the signal directly in 3D removes this burden and is therefore the more effective choice.
+
+\textbf{3D representation unlocks its full potential via direct injection.} We observe that 3D via Text Prompt yields no clear improvement over the three 2D variants, indicating that lifting the signal into 3D alone is not enough—the injection mechanism matters equally. When 3D coordinates are appended to the text prompt, they are tokenized and processed by a VLM backbone that has no strong prior for interpreting numerical 3D coordinates, and the geometric structure is largely lost before reaching the action head. Injecting the 3D displacement as a continuous embedding through AdaLN instead delivers the geometric signal directly to the action head, preserving its full fidelity. 
+
+These findings show that the two design choices of our method are \emph{complementary}: 3D representation provides a signal whose geometry matches the action space, and direct injection ensures this geometry reaches the action head intact.
+
+\subsection{Design Choices Outweigh Data Scaling}
+\label{sec:tasks_scaling}
+\input{assets/figures/tasks_scaling_bar}
+
+All previous results are obtained with the 69-task training set. In this section, we retrain all methods on the original 20-task setup (LIBERO-Object + LIBERO-Spatial). Results are shown in Fig.~\ref{fig:tasks_scaling_exp}. Expanding the training set from 20 to 69 tasks yields consistent gains across the baseline and all controlled variants, confirming that broader task diversity is a meaningful source of generalization. However, even with the larger training set, none of these methods matches the performance that our method already attains with the smaller 20-task setup. This suggests that while data diversity does contribute to generalization, a well-chosen design is a far more effective lever.
+
+\subsection{Robustness to Noisy Depth Inputs}
+\label{sec:depth_noise_exp}
+We evaluate robustness of our method to depth noise by adding Gaussian noise ($\sigma = 0.01$ and $0.03$ m) to depth during training and testing. Fig.~\ref{fig:depth_noise_exp} reports the average success rate across LIBERO-Object and LIBERO-Spatial under Task and Position Perturbation.
+
+\input{assets/figures/depth_noise_exp} 
+\noindent\textbf{Effect of Training-Time Depth Noise.} Training with noisy depth causes moderate degradation compared to the clean-depth variant, as noise propagates to errors in the estimated 3D positions. Nevertheless, both noisy-training variants substantially outperform the baseline, showing that our method retains its advantages even under imperfect training conditions.
+
+\noindent\textbf{Effect of Test-Time Depth Noise.} All three variants---regardless of whether they were trained on clean or noisy depth---maintain comparable performance across all noise levels, indicating that our method is inherently robust to depth perturbations at inference time.
+
+\subsection{Robustness to Noisy Grounding Inputs}
+\label{sec:gnd_noise_exp}
+\input{assets/figures/grounding_noise_exp} 
+We evaluate the robustness of our method to grounding noise by perturbing the oracle 2D point at test time with Gaussian pixel noise, whose standard deviation $\sigma$ is set to a fraction of the target object's bounding-box size. We re-sample the point until it falls within the object mask and also consider an extreme setting that randomly samples 2D points from the mask. 
+Fig.~\ref{fig:grounding_noise_exp} reports the average success rate across LIBERO-Object and LIBERO-Spatial under Task and Position Perturbation.
+Performance gradually degrades with increasing noise, but our method consistently outperforms the baseline by a substantial margin, even under severe noise ($\sigma=50\%$) or random grounding. These results demonstrate the robustness of our method to imperfect grounding within the target object at inference time.
+
+\subsection{Ablation Study}
+\input{assets/tables/ablation}
+We ablate the spatial embedding input components and its injection mechanism into the action head on top of GR00T-N1.6, reporting the average success rate across LIBERO-Object and LIBERO-Spatial under Task and Position Perturbation.
+
+\noindent\textbf{Spatial Embedding Input Components.}
+As shown in Tab.~\ref{tab:ablation_inputs}, we observe that the 3D grounding signal becomes useful when paired with the gripper's position, indicating that the spatial embedding learns the gripper-to-target geometry. Besides, we observe that $\mathbf{d}$ alone outperforms the combined $(\mathbf{p}_t, \mathbf{p}_g, \mathbf{d})$ variant. We attribute this to the absolute positions varying across scenes in LIBERO (e.g. table heights), making it harder to learn an embedding that transfers across scenes and tasks. Using only $\mathbf{d}$ sidesteps this by injecting gripper-to-target geometry as an explicit inductive bias, exposing the policy to a scene-invariant signal and yielding stronger generalizability.
+
+\noindent\textbf{Injection Mechanism.}
+We compare AdaLN-based injection against two self-attention-based alternatives. The first injects the displacement $\mathbf{d}$ through the robot state, concatenating it with the proprioceptive input and encoding it as a state token. The second adopts the In-Context conditioning strategy from DiT~\cite{DiT}, appending a spatial embedding as an extra token to the action and state tokens. As shown in Tab.~\ref{tab:ablation_injection}, In-Context conditioning outperforms the robot-state variant, but both remain inferior to AdaLN, suggesting that directly modulating normalized features provides a more effective pathway for spatial conditioning.

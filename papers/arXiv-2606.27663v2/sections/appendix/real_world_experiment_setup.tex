@@ -1,0 +1,57 @@
+\section{Real-World Experimental Details}~\label{supp:sec:real_world_setup_details}
+In this section, we provide additional details of our real-world experiments, including: (1) the task setup and evaluation details (Sec.~\ref{supp:sec:subsec:real-world-task-setup}), (2) how we obtain 2D grounding information in real-world (Sec.~\ref{supp:sec:subsec:real-world-grounding-source}), (3) the model training configurations (Sec.~\ref{supp:sec:subsec:real-world-training-details}), and (4) the full experimental results (Sec.~\ref{supp:sec:subsec:real-world-experimental-results-details}).
+
+\subsection{Task Setup and Evaluation Details}
+\label{supp:sec:subsec:real-world-task-setup}
+\input{sections/appendix/assets/figures/real_world_task}
+We collect 8 pick-and-place tasks spanning 4 distinct object layouts, with 2 tasks sharing each layout and 40 demonstrations per task for training. The full set of tasks, together with their in-distribution (training) configurations and their test-time perturbation setups, is illustrated in Fig.~\ref{fig:real_world_experiment_setup}. Because every two tasks share a common in-distribution layout, the two tasks differ only in the instructed target object and placement region rather than in the overall scene arrangement. When collecting demonstrations, we introduce moderate positional variation across episodes while preserving the overall layout.
+
+Each task is evaluated under three conditions. \emph{In-Distribution} uses the original training instruction and layout. \emph{Task Perturbation} keeps the layout unchanged but swaps the target object or placement region for another item, producing an instruction–scene pairing that is absent from the training set. \emph{Position Perturbation} preserves the instruction but relocates the target object or placement region. For both perturbations, the target objects and placement regions involved are themselves objects and locations that the policy has already picked from or placed into in \emph{other} training tasks; what is novel is only their pairing with the current instruction and scene (Task Perturbation) or their spatial placement (Position Perturbation). This ensures that the perturbations probe spatial and task generalization rather than confronting the policy with entirely unseen objects or regions. We run 10 rollouts per condition per task and report the average success rate across all 8 tasks.
+
+
+\subsection{Grounding Source Details}
+\label{supp:sec:subsec:real-world-grounding-source}
+For all real-world experiments, we use Qwen3-VL-4B~\cite{qwen3vl} as our 2D grounding source. Unlike the simulation setup, where 2D target points are sampled from oracle segmentation masks, the real-world setup relies entirely on an off-the-shelf vision-language model: we apply a Qwen3-VL-4B directly with no fine-tuning. 
+
+Given the task instruction and the front-view RGB image, we query the model with a single prompt that asks it to localize both sub-goal targets at once---the object to be picked up (role \texttt{target}) and the region or object where it should be placed (role \texttt{placement})---and to return their image-plane coordinates in a fixed JSON format. The exact prompt is shown below:
+\begin{promptbox}
+Task: "\{task\}"
+\\
+
+Based on this task, look at the image and identify:
+\\
+
+1. The object that needs to be picked up (role: "target")
+\\
+2. The location or object where it should be placed (role: "placement")
+\\
+
+Output ONLY a JSON array with exactly two entries, no extra text:
+
+[
+
+\qquad\{\{"point\_2d": [x, y], "label": "<object name>", "role": "target"\}\},
+
+\qquad\{\{"point\_2d": [x, y], "label": "<object name>", "role": "placement"\}\}
+
+]
+\end{promptbox}
+
+We parse the returned JSON and rescale the normalized coordinates (in $[0, 1000]$) to the input image resolution to obtain the two 2D points on the front-view image. Depending on the active sub-goal---reach-to-grasp or transport-to-place---the corresponding point (\texttt{target} or \texttt{placement}) is selected as the sub-goal target for the current time-step.
+
+\subsection{Training Details}
+\label{supp:sec:subsec:real-world-training-details}
+\noindent\textbf{Dataset Details.}
+Each frame in our collected real-world dataset records an $8$-D proprioceptive robot state, consisting of the end-effector pose---parameterized as the TCP position in the robot base frame together with a rotation vector (rotvec) for orientation ($6$-D)---and the measured gripper finger widths ($2$-D). The corresponding action is $7$-D and comprises a $6$-D end-effector command (position $+$ rotvec) and a $1$-D absolute gripper width command. Following~\cite{chi2024universal}, the end-effector action is expressed as a \emph{relative} transform with respect to the current end-effector pose, with the rotational component composed in $\mathrm{SO}(3)$.
+
+\noindent\textbf{Training Details for GR00T-N1.6.}
+We fine-tune GR00T-N1.6~\cite{gr00tn1_2025} on our collected real-world dataset. The model predicts an action chunk of $24$ future steps per forward pass. We use a global batch size of $256$ and train for $20{,}000$ steps using AdamW with a peak learning rate of $1{\times}10^{-4}$, a cosine decay schedule with a warmup ratio of $0.05$ ($\sim\!1{,}000$ steps), weight decay of $1{\times}10^{-5}$, and gradient clipping at a max norm of $1.0$. For visual augmentation, input images are first letter-boxed (padded with zeros on the shorter side) to a square, resized so that the shortest edge is $256$ px, randomly cropped along each side to $0.95$ of its length, and finally resized back to $256\times 256$. We further apply ColorJitter-style perturbations with brightness $0.3$, contrast $0.4$, saturation $0.5$, and hue $0.08$, while random rotation is disabled. All other hyperparameters follow the official configuration~\cite{gr00tn1_2025}.
+
+\noindent\textbf{Training Details for $\pi_{0.5}$.}
+We fine-tune $\pi_{0.5}$~\cite{pi05} on our collected real-world dataset. The model predicts an action chunk of $24$ future steps per forward pass. We use a global batch size of $256$ and train for $20{,}000$ steps using AdamW with a peak learning rate of $5{\times}10^{-5}$, a linear warmup schedule over the first $5{,}000$ steps and held constant thereafter, weight decay of $1{\times}10^{-10}$, and gradient clipping at a max norm of $1.0$. For visual augmentation, input images are resized (with padding) to $224{\times}224$ px; on the third-person view we apply a random crop covering $0.95$ of each spatial dimension, a bilinear resize back to $224{\times}224$ px, and a random rotation of $\pm 5^{\circ}$, while the wrist view receives no geometric augmentation. We further apply ColorJitter-style perturbations with brightness $0.3$, contrast $0.4$, and saturation $0.5$, while hue jitter is disabled. All other hyperparameters follow the official configuration~\cite{pi05}.
+
+\subsection{Full Experimental Results}
+\label{supp:sec:subsec:real-world-experimental-results-details}
+\input{sections/appendix/assets/tables/real_world_experiment_table}
+
+We report numerical performance values for all evaluations in Sec.~\ref{sec:subsec:real-world-experimental-results}. Tab.~\ref{tab:real_in_distribution} presents the numerical results of In-Distribution evaluation, Tab.~\ref{tab:real_task_perturbation} presents the numerical results of Task Perturbation evaluation and Tab.~\ref{tab:real_position_perturbation} presents the numerical results of Position Perturbation evaluation.

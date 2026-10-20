@@ -1,0 +1,92 @@
+% ===== Color definitions (put once in your preamble) =====
+\definecolor{mygray}{HTML}{EFEFEF}
+\definecolor{myblue}{HTML}{EAF3FF}
+
+% =========================================================
+% Table 1: In-Distribution
+% =========================================================
+\begin{table}[t]
+\centering
+\caption{Real-world In-Distribution evaluation results.}
+\label{tab:real_in_distribution}
+\resizebox{\linewidth}{!}{
+\begin{tabular}{l cccccccc c}
+\toprule
+\textbf{Method} & Task 1 & Task 2 & Task 3 & Task 4 & Task 5 & Task 6 & Task 7 & Task 8 & \textbf{Avg.} \\
+\midrule
+$\pi_{0.5}$~\cite{pi05} (Baseline)         & 9/10  & 10/10  & 8/10  & 9/10  & 8/10 & 8/10 & 9/10  & 7/10 & 85.0 \\
+\rowcolor{myblue}
+$\pi_{0.5}$ + Ours              & 10/10 & 10/10 & 9/10 & 9/10  & 9/10 & 7/10 & 10/10 & 9/10 & 91.3 \\
+\midrule
+GR00T-N1.6~\cite{gr00tn1_2025} (Baseline)         & 7/10  & 8/10  & 8/10  & 7/10  & 5/10 & 7/10 & 7/10  & 6/10 & 68.8 \\
+\rowcolor{myblue}
+GR00T-N1.6 + Ours              & 10/10 & 10/10 & 10/10 & 8/10  & 9/10 & 9/10 & 10/10 & 8/10 & 92.5 \\
+\midrule
+% \rowcolor{mygray} \multicolumn{10}{l}{\textit{Controlled comparison of representation and injection}} \\
+% \midrule
+GR00T-N1.6 + 2D via Text Prompt    & 9/10  & 9/10  & 8/10  & 8/10  & 9/10 & 9/10 & 10/10 & 8/10 & 87.5 \\
+GR00T-N1.6 + 2D via Visual Prompt  & 9/10  & 8/10  & 8/10  & 10/10 & 9/10 & 8/10 & 10/10 & 9/10 & 88.8 \\
+GR00T-N1.6 + 2D via AdaLN  & 10/10  & 9/10  & 7/10  & 9/10 & 9/10 & 8/10 & 9/10 & 9/10 & 87.5 \\
+GR00T-N1.6 + 3D via Text Prompt & 8/10  & 9/10  & 9/10  & 8/10 & 8/10 & 9/10 & 9/10 & 9/10 & 86.3 \\
+\bottomrule
+\end{tabular}
+}
+\end{table}
+
+% =========================================================
+% Table 2: Task Perturbation
+% =========================================================
+\begin{table}[t]
+\centering
+\caption{Real-world Task Perturbation evaluation results.}
+\label{tab:real_task_perturbation}
+\resizebox{\linewidth}{!}{
+\begin{tabular}{l cccccccc c}
+\toprule
+\textbf{Method} & Task 1 & Task 2 & Task 3 & Task 4 & Task 5 & Task 6 & Task 7 & Task 8 & \textbf{Avg.} \\
+\midrule
+$\pi_{0.5}$~\cite{pi05} (Baseline)         & 8/10  & 3/10  & 0/10  & 4/10  & 3/10 & 2/10 & 5/10  & 1/10 & 32.5 \\
+\rowcolor{myblue}
+$\pi_{0.5}$ + Ours              & 5/10 & 9/10 & 9/10 & 10/10  & 10/10 & 5/10 & 9/10 & 6/10 & 78.8 \\
+\midrule
+GR00T-N1.6~\cite{gr00tn1_2025} (Baseline)         & 0/10 & 3/10 & 0/10 & 0/10  & 0/10 & 0/10 & 0/10 & 0/10 & 3.8 \\
+\rowcolor{myblue}
+GR00T-N1.6 + Ours              & 9/10 & 8/10 & 0/10 & 10/10 & 9/10 & 7/10 & 3/10 & 5/10 & 63.8 \\
+\midrule
+GR00T-N1.6 + 2D via Text Prompt  & 0/10 & 4/10 & 0/10 & 0/10  & 0/10 & 0/10 & 0/10 & 0/10 & 5.0 \\
+GR00T-N1.6 + 2D via Visual Prompt  & 0/10 & 3/10 & 0/10 & 1/10  & 0/10 & 1/10 & 0/10 & 0/10 & 6.3 \\
+GR00T-N1.6 + 2D via AdaLN  & 3/10  & 5/10  & 0/10  & 2/10 & 3/10 & 2/10 & 0/10 & 0/10 & 18.8 \\
+GR00T-N1.6 + 3D via Text Prompt & 2/10  & 0/10  & 0/10  & 0/10 & 0/10 & 1/10 & 0/10 & 1/10 & 5.0 \\
+\bottomrule
+\end{tabular}
+}
+\end{table}
+
+% =========================================================
+% Table 3: Position Perturbation
+% =========================================================
+\begin{table}[t]
+\centering
+\caption{Real-world Position Perturbation evaluation results.}
+\label{tab:real_position_perturbation}
+\resizebox{\linewidth}{!}{
+\begin{tabular}{l cccccccc c}
+\toprule
+\textbf{Method} & Task 1 & Task 2 & Task 3 & Task 4 & Task 5 & Task 6 & Task 7 & Task 8 & \textbf{Avg.} \\
+\midrule
+$\pi_{0.5}$~\cite{pi05} (Baseline)         & 0/10  & 9/10  & 4/10  & 0/10  & 3/10 & 1/10 & 3/10  & 2/10 & 27.5 \\
+\rowcolor{myblue}
+$\pi_{0.5}$ + Ours              & 10/10 & 5/10 & 2/10 & 8/10  & 5/10 & 6/10 & 9/10 & 4/10 & 61.3 \\
+\midrule
+GR00T-N1.6~\cite{gr00tn1_2025} (Baseline)         & 2/10  & 0/10 & 0/10 & 0/10 & 0/10 & 0/10 & 0/10 & 1/10 & 3.8 \\
+\rowcolor{myblue}
+GR00T-N1.6 + Ours              & 10/10 & 5/10 & 9/10 & 9/10 & 0/10 & 3/10 & 9/10 & 8/10 & 66.3 \\
+\midrule
+GR00T-N1.6 + 2D via Text Prompt    & 3/10  & 0/10 & 0/10 & 0/10 & 0/10 & 0/10 & 0/10 & 3/10 & 7.5 \\
+GR00T-N1.6 + 2D via Visual Prompt  & 1/10  & 0/10 & 0/10 & 0/10 & 0/10 & 1/10 & 0/10 & 2/10 & 5.0 \\
+GR00T-N1.6 + 2D via AdaLN  & 4/10  & 0/10  & 2/10  & 0/10 & 0/10 & 1/10 & 5/10 & 1/10 & 16.3 \\
+GR00T-N1.6 + 3D via Text Prompt & 2/10  & 0/10  & 0/10  & 0/10 & 0/10 & 1/10 & 0/10 & 1/10 & 5.0 \\
+\bottomrule
+\end{tabular}
+}
+\end{table}

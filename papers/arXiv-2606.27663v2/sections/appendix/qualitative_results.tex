@@ -1,0 +1,31 @@
+% \section{Qualitative Results and Failure Modes}~\label{supp:sec:qualitative_results}
+% In this section, we provide qualitative results and failure mode analyses, including: (1) qualitative results in both simulation and real-world settings (Sec.~\ref{supp:subsec:qualitative_results}) and (2) failure mode analyses in real-world setting (Sec.~\ref{supp:subsec:failure_modes}).
+
+% \subsection{Qualitative Results}
+% ~\label{supp:subsec:qualitative_results}
+% \input{sections/appendix/assets/figures/libero_qualitative_results}
+% \input{sections/appendix/assets/figures/real_world_qualitative_results}
+% Fig.~\ref{fig:qualitative_results_sim} shows the results on LIBERO and LIBERO-PRO, while Fig.~\ref{fig:qualitative_results_real_world} presents the results in the real-world setting. Across both settings, the baseline succeeds In-distribution but fails under Task and Position Perturbation, whereas our method remains successful—consistent with the quantitative results in Sec.~\ref{sec:libero_and_libero_pro} and Sec.~\ref{sec:subsec:real-world-experimental-results}. For more qualitative results, please refer to our project page.
+
+% \subsection{Failure Modes in Real-World Experiments}
+% ~\label{supp:subsec:failure_modes}
+% \input{sections/appendix/assets/figures/real_world_failure_cases}
+% We observer that on the real-world tasks, applying our method on GR00T-N1.6 still got 0/10 on Task 3 Task Perturbation and Task 5 Position Perturbation.
+% In this section, we provide the failure mode analyses of theses two cases. 
+% We previde the video rollouts of GR00T-N1.6 and ours on these two cases in Fig.~\ref{fig:failure_cases_real_world}. First, we observe that the 2D points predicted by Qwen3-VL-4B are almost always correct, suggesting that failures arise not from the grounding information. 
+% In Position Perturbation of Task 5, the policy attempts to adjust its approach toward the placement area, but ultimately fails. 
+% In Task Perturbation of Task 3, the policy places the object on the training placement area (the plate) before reaching the bowl. 
+% We hypothesize that the larger plate induces a broader 3D grounding region during training, causing the policy to interpret grounding near the spatially adjacent bowl as corresponding to the learned plate region at test time, resulting in premature placement.
+\section{Qualitative Results and Failure Modes}\label{supp:sec:qualitative_results}
+This section presents qualitative results in both simulation and real-world settings (Sec.~\ref{supp:subsec:qualitative_results}), followed by an analysis of failure modes in the real-world experiments (Sec.~\ref{supp:subsec:failure_modes}).
+
+\subsection{Qualitative Results}\label{supp:subsec:qualitative_results}
+\input{sections/appendix/assets/figures/libero_qualitative_results}
+\input{sections/appendix/assets/figures/real_world_qualitative_results}
+Fig.~\ref{fig:qualitative_results_sim} shows qualitative results on LIBERO and LIBERO-PRO, and Fig.~\ref{fig:qualitative_results_real_world} shows those in the real-world setting. In both simulation and the real world, the baseline succeeds under the In-distribution setting but fails under Task Perturbation and Position Perturbation, whereas our method remains successful under both perturbations. These observations are consistent with the quantitative results in Sec.~\ref{sec:libero_and_libero_pro} and Sec.~\ref{sec:subsec:real-world-experimental-results}. More qualitative results are available on our project page.
+
+\subsection{Failure Modes in Real-World Experiments}\label{supp:subsec:failure_modes}
+\input{sections/appendix/assets/figures/real_world_failure_cases}
+Although our method improves GR00T-N1.6~\cite{gr00tn1_2025} in the real-world experiments, it still achieves a 0/10 success rate in two settings: Task 3 under Task Perturbation and Task 5 under Position Perturbation. We analyze these two failure cases below, with representative rollouts of GR00T-N1.6 and our method shown in Fig.~\ref{fig:failure_cases_real_world}.
+
+We first note that the 2D points predicted by Qwen3-VL-4B~\cite{qwen3vl} are correct in nearly all rollouts, suggesting that the failures do not stem from inaccurate grounding. Under Position Perturbation in Task 5, the policy attempts to adjust its trajectory toward the placement area but ultimately fails to complete the placement. Under Task Perturbation in Task 3, the policy places the object on the plate, i.e., the placement target seen during training, before reaching the bowl. We hypothesize that the larger size of the plate induces a broader 3D grounding region during training. As a result, at test time the policy interprets the grounding near the spatially adjacent bowl as falling within the learned plate region, leading to premature placement.

@@ -1,0 +1,13 @@
+{
+  "openpi": {
+    "url": "https://github.com/Physical-Intelligence/openpi",
+    "commit": "215abfb217dbac7d5f1273282331b9b1866c0479"
+  },
+  "libero": {
+    "url": "https://github.com/Lifelong-Robot-Learning/LIBERO",
+    "commit": "f78abd68ee283de9f9be3c8f7e2a9ad60246e95c"
+  },
+  "paper": "arXiv:2606.27663v2",
+  "created": "2026-10-20",
+  "status": "independent implementation; not GPU-validated; no claimed benchmark results"
+}

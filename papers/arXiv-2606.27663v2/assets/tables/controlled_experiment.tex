@@ -1,0 +1,25 @@
+\definecolor{mygray}{HTML}{EFEFEF}
+\begin{table}[t]
+\centering
+\caption{\textbf{Controlled comparison of representation and injection on LIBERO-PRO.} Given the identical oracle 2D target point, 2D grounding signals are fundamentally limited regardless of injection mechanism, while 3D representation unlocks its full potential only via our direct injection.}
+\label{tab:controlled_experiment}
+\resizebox{0.72\linewidth}{!}{
+\begin{tabular}{l ccc ccc}
+\toprule
+\multirow{2}{*}{\textbf{Method}} & \multicolumn{3}{c}{Task Perturbation} & \multicolumn{3}{c}{Position Perturbation} \\
+\cmidrule(lr){2-4} \cmidrule(lr){5-7}
+  & Object & Spatial & Avg. & Object & Spatial & Avg. \\
+\midrule
+
+% Ours
+GR00T-N1.6~\cite{gr00tn1_2025} & 10.0 & 52.4 & 31.2 & 29.2 & 27.0 & 28.1 \\
+\midrule
++ 2D via Text Prompt & 21.6 & 63.4 & 42.5 & 42.4 & 21.0 & 31.7 \\
++ 2D via Visual Prompt & 15.8 & 64.8 & 40.3 & 43.0 & 17.8 & 30.4 \\
++ 2D via AdaLN & 26.4 & 69.0 & 47.7 & 44.0 & 31.6 & 37.8 \\
++ 3D via Text Prompt & 16.2 & 60.8 & 38.5 & 49.4 & 29.4 & 39.4 \\
++ 3D via AdaLN (Ours) & \textbf{70.4} & \textbf{84.6} & \textbf{77.5} & \textbf{79.4} & \textbf{41.0} & \textbf{60.2} \\
+\bottomrule
+\end{tabular}
+}
+\end{table}

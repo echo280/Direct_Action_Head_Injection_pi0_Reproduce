@@ -1,0 +1,50 @@
+\definecolor{mygray}{HTML}{EFEFEF}
+\definecolor{myblue}{HTML}{EAF3FF}
+\definecolor{deltagreen}{HTML}{3A7D44}
+\definecolor{deltared}{HTML}{CC3333}
+
+\begin{table}[t]
+\centering
+\caption{\textbf{LIBERO and LIBERO-PRO results.} All baselines exhibit substantial performance drops under both Task Perturbation and Position Perturbation. In contrast, our method consistently improves two distinct backbones under both perturbations while preserving in-distribution performance, demonstrating that the mechanism is both effective and backbone-agnostic. The best performance in each suite is highlighted in bold. * denotes results reproduced by us using the same datasets as ours.}
+\label{tab:libero_and_libero_pro}
+\resizebox{0.9\linewidth}{!}{
+\begin{tabular}{l ccc ccc ccc}
+\toprule
+\multirow{3}{*}{\textbf{Method}} 
+  & \multicolumn{3}{c}{\textbf{LIBERO}~\cite{libero}} 
+  & \multicolumn{6}{c}{\textbf{LIBERO-PRO}~\cite{zhou2025liberopro}} \\
+\cmidrule(lr){2-4} \cmidrule(lr){5-10}
+  & \multicolumn{3}{c}{In Distribution}
+  & \multicolumn{3}{c}{Task Perturbation} 
+  & \multicolumn{3}{c}{Position Perturbation} \\
+\cmidrule(lr){2-4} \cmidrule(lr){5-7} \cmidrule(lr){8-10}
+  & Object & Spatial & Avg. & Object & Spatial & Avg. & Object & Spatial & Avg. \\
+\midrule
+
+% Open-Source VLA
+\rowcolor{mygray} \multicolumn{10}{l}{\textit{Open-source VLAs}} \\
+\midrule
+OpenVLA~\cite{kim2024openvla} & 88.4 & 84.7 & 86.6 & 1.8 & 46.4 & 24.1 & 0.0 & 0.0 & 0.0 \\
+$\pi_{0}$~\cite{pi0} & 98.8 & 96.8 & 97.8 & 10.0 & 54.4 & 32.2 & 0.2 & 11.6 & 5.9 \\
+MolmoAct~\cite{molmoact2025} & 95.4 & 87.0 & 91.2 & 9.2 & 31.6 & 20.4 & 4.2 & 0.2 & 2.2 \\
+FALCON~\cite{falcon}* & 98.8 & 97.6 & \textbf{98.2} & 5.0 & 48.2 & 26.6 & 0.6 & 12.2 & 6.4 \\
+\midrule
+
+% Ours
+\rowcolor{mygray} \multicolumn{10}{l}{\textit{Controlled comparison}} \\
+\midrule
+$\pi_{0.5}$~\cite{pi05} & 94.8 & 96.0 & 95.4 & 20.0 & 54.6 & 37.3 & 36.0 & 58.0 & 47.0 \\
+\rowcolor{myblue}
+$\pi_{0.5}$ + Ours & 97.0 & \textbf{98.2} & 97.6 & \textbf{70.6} & 81.2 & 75.9 & 75.0 & \textbf{69.4} & \textbf{72.2} \\
+\rowcolor{myblue}
+$\Delta$ & \textcolor{deltagreen}{\footnotesize{2.2 $\uparrow$}} & \textcolor{deltagreen}{\footnotesize{2.2 $\uparrow$}} & \textcolor{deltagreen}{\footnotesize{2.2 $\uparrow$}} & \textcolor{deltagreen}{\footnotesize{50.6 $\uparrow$}} & \textcolor{deltagreen}{\footnotesize{26.6 $\uparrow$}} & \textcolor{deltagreen}{\footnotesize{38.6 $\uparrow$}} & \textcolor{deltagreen}{\footnotesize{39.0 $\uparrow$}} & \textcolor{deltagreen}{\footnotesize{11.4 $\uparrow$}} & \textcolor{deltagreen}{\footnotesize{25.2 $\uparrow$}} \\
+\midrule
+GR00T-N1.6~\cite{gr00tn1_2025} & 93.8 & 93.2 & 93.5 & 10.0 & 52.4 & 31.2 & 29.2 & 27.0 & 28.1 \\
+\rowcolor{myblue}
+GR00T-N1.6 + Ours & \textbf{99.6} & 92.4 & 96.0 & 70.4 & \textbf{84.6} & \textbf{77.5} & \textbf{79.4} & 41.0 & 60.2 \\
+\rowcolor{myblue}
+$\Delta$ & \textcolor{deltagreen}{\footnotesize{5.8 $\uparrow$}} & \textcolor{deltared}{\footnotesize{0.8 $\downarrow$}} & \textcolor{deltagreen}{\footnotesize{2.5 $\uparrow$}} & \textcolor{deltagreen}{\footnotesize{60.4 $\uparrow$}} & \textcolor{deltagreen}{\footnotesize{32.2 $\uparrow$}} & \textcolor{deltagreen}{\footnotesize{46.3 $\uparrow$}} & \textcolor{deltagreen}{\footnotesize{50.2 $\uparrow$}} & \textcolor{deltagreen}{\footnotesize{14.0 $\uparrow$}} & \textcolor{deltagreen}{\footnotesize{32.1 $\uparrow$}} \\
+\bottomrule
+\end{tabular}
+}
+\end{table}

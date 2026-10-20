@@ -1,0 +1,37 @@
+\begin{wraptable}{r}{0.33\textwidth}
+\centering
+% --- Table 3 ---
+\captionof{table}{Spatial embedding input components ablation.}
+\label{tab:ablation_inputs}
+\resizebox{\linewidth}{!}{
+\begin{tabular}{ >{\centering\arraybackslash}p{1.2cm} >{\centering\arraybackslash}p{1.0cm} >{\centering\arraybackslash}p{1.0cm} c }
+\toprule
+\multicolumn{3}{c}{\textbf{Spatial Embedding Inputs}} & \multirow{2}{*}{\textbf{Avg. Success Rate}} \\
+\cmidrule(lr){1-3}
+$\mathbf{p}_t$ & $\mathbf{p}_g$ & $\mathbf{d}$ & \\
+\midrule
+\multicolumn{3}{c}{\textcolor{gray}{GR00T-N1.6 (Baseline)}} & \textcolor{gray}{29.7} \\
+\midrule
+\checkmark &            &            & 34.3 \\
+\checkmark & \checkmark &            & 53.7 \\
+           &            & \checkmark & \textbf{68.9} \\
+\checkmark & \checkmark & \checkmark & 59.7 \\
+\bottomrule
+\end{tabular}}
+
+% --- Table 4 ---
+\captionof{table}{Injection mechanism ablation.}
+\label{tab:ablation_injection}
+\resizebox{\linewidth}{!}{
+\begin{tabular}{l c}
+\toprule
+\textbf{Injection Method} & \textbf{Avg. Success Rate} \\
+\midrule
+\textcolor{gray}{GR00T-N1.6 (Baseline)} & \textcolor{gray}{29.7} \\
+\midrule
+Robot State    & 51.7 \\
+In-Context~\cite{DiT}    & 58.5 \\
+AdaLN (Ours)   & \textbf{68.9} \\
+\bottomrule
+\end{tabular}}
+\end{wraptable}

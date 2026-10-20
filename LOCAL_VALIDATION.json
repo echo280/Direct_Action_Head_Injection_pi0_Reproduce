@@ -1,0 +1,20 @@
+{
+  "date": "2026-10-20",
+  "parsed_python_files": 106,
+  "syntax_errors": [],
+  "unit_test_returncode": 0,
+  "unit_test_output": "test_depth_axes_and_rigid_transform (test_geometry.GeometryTests.test_depth_axes_and_rigid_transform) ... ok\ntest_invalid_depth_and_pixel_rejected (test_geometry.GeometryTests.test_invalid_depth_and_pixel_rejected) ... ok\ntest_invalid_extrinsic_rejected (test_geometry.GeometryTests.test_invalid_extrinsic_rejected) ... ok\ntest_mask_interior (test_geometry.GeometryTests.test_mask_interior) ... skipped 'scipy unavailable locally; run on simulator host'\ntest_object_height_switch_strict_and_latched (test_geometry.GeometryTests.test_object_height_switch_strict_and_latched) ... ok\ntest_sidecar_alignment_and_dataset_fingerprint (test_geometry.GeometryTests.test_sidecar_alignment_and_dataset_fingerprint) ... ok\n\n----------------------------------------------------------------------\nRan 6 tests in 0.392s\n\nOK (skipped=1)\n",
+  "not_executed": [
+    "JAX model smoke",
+    "GPU dependency installation",
+    "pretrained weights",
+    "MuJoCo replay",
+    "training",
+    "rollout"
+  ],
+  "task_counts": {
+    "20": 20,
+    "69": 69
+  },
+  "bash_syntax": "passed for all 8 shell scripts"
+}

@@ -1,0 +1,25 @@
+\definecolor{mygray}{HTML}{EFEFEF}
+\begin{table}[t]
+\centering
+\caption{Grounding noise experiment on LIBERO-PRO under different grounding noise condition.}
+\label{tab:grounding_noise_experiment_table}
+\resizebox{0.75\linewidth}{!}{
+\begin{tabular}{l cc cc c}
+\toprule
+\multirow{2}{*}{\textbf{Noise Condition}} & \multicolumn{2}{c}{Task Perturbation} & \multicolumn{2}{c}{Position Perturbation} & \multirow{2}{*}{\textbf{Average}} \\
+\cmidrule(lr){2-3} \cmidrule(lr){4-5}
+ & Object & Spatial & Object & Spatial & \\
+\midrule
+\textcolor{gray}{GR00T-N1.6 (Baseline)} & \textcolor{gray}{10.0} & \textcolor{gray}{52.4} & \textcolor{gray}{29.2} & \textcolor{gray}{27.0} & \textcolor{gray}{29.7} \\
+\midrule
+% Clean grounding noise testing
+% \rowcolor{mygray} \multicolumn{6}{l}{\textit{Ours}} \\
+$\sigma=0$ & 70.4 & 84.6 & 79.4 & 41.0 & 68.9 \\ 
+$\sigma=10\%$ & 67.4 & 81.6 & 78.6 & 41.4 & 67.3 \\
+$\sigma=30\%$ & 62.0 & 80.4 & 67.4 & 38.4 & 62.1 \\
+$\sigma=50\%$ & 59.6 & 78.4 & 63.8 & 37.6 & 59.9 \\
+Random sampling & 57.4 & 76.2 & 66.2 & 37.2 & 59.3 \\
+\bottomrule
+\end{tabular}
+}
+\end{table}

@@ -1,0 +1,25 @@
+\definecolor{mygray}{HTML}{EFEFEF}
+\begin{table}[t]
+\centering
+\caption{Controlled comparison of representation and injection on LIBERO-PRO under 20 training-task setup.}
+\label{tab:controlled_experiment_20_tasks}
+\resizebox{0.75\linewidth}{!}{
+\begin{tabular}{l ccc ccc}
+\toprule
+\multirow{2}{*}{\textbf{Method}} & \multicolumn{3}{c}{Task Perturbation} & \multicolumn{3}{c}{Position Perturbation} \\
+\cmidrule(lr){2-4} \cmidrule(lr){5-7}
+  & Object & Spatial & Avg. & Object & Spatial & Avg. \\
+\midrule
+
+% Ours
+GR00T-N1.6~\cite{gr00tn1_2025} & 9.0 & 48.8 & 28.9 & 4.8 & 2.0 & 3.4 \\
+\midrule
++ 2D via Text Prompt & 10.0 & 54.2 & 32.1 & 24.6 & 6.0 & 15.3 \\
++ 2D via Visual Prompt & 10.0 & 49.2 & 29.6 & 1.2 & 2.2 & 1.7 \\
++ 2D via AdaLN & 11.2 & 68.0 & 39.6 & 35.4 & 3.4 & 19.4 \\
++ 3D via Text Prompt & 10.0 & 55.8 & 32.9 & 7.4 & 3.4 & 5.4 \\
++ 3D via AdaLN (Ours) & \textbf{52.4} & \textbf{71.6} & \textbf{62.0} & \textbf{67.8} & \textbf{15.2} & \textbf{41.5} \\
+\bottomrule
+\end{tabular}
+}
+\end{table}

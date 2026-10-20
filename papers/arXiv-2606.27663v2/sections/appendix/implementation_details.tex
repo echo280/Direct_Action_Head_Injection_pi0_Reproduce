@@ -1,0 +1,111 @@
+\section{Implementation Details}~\label{supp:sec:implementation_details}
+In this section, we provide implementation details for: (1) lifting a 2D point into 3D and encoding the spatial embedding (Sec.~\ref{supp:sec:subsec:lifting}); (2) injecting the spatial embedding into the VLA (Sec.~\ref{supp:sec:subsec:app_inject}); and (3) each variant evaluated in Sec.~\ref{sec:grounding_rep_inj} of the main paper (Sec.~\ref{supp:sec:subsec:grounding_variants}).
+
+\subsection{From 2D Target Point to 3D Spatial Embedding}
+\label{supp:sec:subsec:lifting}
+This subsection details the lifting procedure that converts a 2D target point on the third-person view image into a 3D position expressed in the robot base frame, and the subsequent encoding into a spatial embedding.
+
+\subsubsection{Notation}
+Let $(u, v) \in \mathbb{R}^2$ denote the 2D target pixel produced by the grounding source on the third-person view image, and $D \in \mathbb{R}^{H \times W}$ the aligned depth image of the same view. We denote the camera intrinsic matrix as $K \in \mathbb{R}^{3 \times 3}$, with focal lengths $(f_x, f_y)$ and principal point $(c_x, c_y)$, and the camera extrinsic as $T^{\text{base}}_{\text{cam}} = (R, \mathbf{t}) \in \mathrm{SE}(3)$, which maps a point from the camera frame to the robot base frame. The gripper position $\mathbf{p}_g \in \mathbb{R}^3$ is obtained directly from the proprioceptive robot state via forward kinematics, and is already expressed in the robot base frame.
+
+\subsubsection{Lifting 2D to 3D}
+We first read the metric depth at the target pixel, $z = D(u, v)$, and back-project the pixel to the camera frame using the pinhole model:
+\begin{equation}
+    \mathbf{p}^{\text{cam}}_t \;=\; z \cdot K^{-1} \begin{bmatrix} u \\ v \\ 1 \end{bmatrix}
+    \;=\;
+    \begin{bmatrix}
+        (u - c_x)\, z / f_x \\
+        (v - c_y)\, z / f_y \\
+        z
+    \end{bmatrix}.
+\end{equation}
+Applying the camera extrinsic then yields the target position in the robot base frame:
+\begin{equation}
+\mathbf{p}_t \;=\; R\, \mathbf{p}^{\text{cam}}_t + \mathbf{t}.
+\end{equation}
+\subsubsection{Compute Displacement and Spatial Embedding}
+Since $\mathbf{p}_t$ and $\mathbf{p}_g$ now share the same coordinate frame, their difference is geometrically well-defined. We compute the 3D relative displacement:
+\begin{equation}
+\mathbf{d} = \mathbf{p}_t - \mathbf{p}_g,
+\end{equation}
+and encode it through a two-layer MLP with ReLU activation to obtain the spatial embedding:
+\begin{equation}
+    \mathbf{z}_{\text{spatial}} = \operatorname{MLP}(\mathbf{d}) \in  \mathbb{R}^{d_h},
+    \label{eq:mlp}
+\end{equation}
+where $d_h$ is the hidden size of the action head. For both GR00T-N1.6~\cite{gr00tn1_2025} and $\pi_{0.5}$~\cite{pi05}, the MLP's hidden and output dimensions are both set to 1024.
+
+
+\subsection{Inject Spatial Embedding into the VLA}
+\label{supp:sec:subsec:app_inject}
+
+The VLA backbones we build upon adopt a DiT-based action head whose blocks are modulated through an adaptive layer normalization (AdaLN) conditioning mechanism~\cite{DiT, perez2018film}. In its original formulation, AdaLN conditions each DiT block solely on the diffusion timestep embedding $\mathbf{z}_{\text{time}} \in \mathbb{R}^{d_h}$, where a per-block linear projection regresses scale and shift parameters that modulate the normalized features:
+\begin{equation}
+    \gamma_{\text{orig}},\ \beta_{\text{orig}}
+    = \operatorname{Linear}(\mathbf{z}_{\text{time}}).
+    \label{eq:adaln_orig}
+\end{equation}
+To inject our spatial signal, we extend this mechanism by fusing $\mathbf{z}_{\text{spatial}}$ with $\mathbf{z}_{\text{time}}$ via element-wise addition before regressing $\gamma$ and $\beta$:
+\begin{equation}
+    \gamma,\ \beta
+    = \operatorname{Linear}(\mathbf{z}_{\text{time}}
+      + \mathbf{z}_{\text{spatial}}).
+    \label{eq:adaln_ours}
+\end{equation}
+The resulting parameters then modulate the normalized features in each DiT block of the action head, allowing the policy to incorporate the task-relevant 3D geometric information carried by $\mathbf{z}_{\text{spatial}}$ when predicting actions. Since the existing AdaLN linear projection is reused as-is, no additional parameters are introduced inside the action head.
+
+\noindent\textbf{Preserving pretrained AdaLN behavior at initialization.}
+A naive instantiation of Eq.~\ref{eq:adaln_ours} perturbs the pretrained AdaLN behavior from the very first training step: as soon as $\mathbf{z}_{\text{spatial}}$ is added to $\mathbf{z}_{\text{time}}$, the input to the AdaLN linear projection shifts away from the distribution it was pretrained on, which can destabilize the pretrained timestep conditioning that the action head relies on. To avoid this, we initialize the weight and bias of the \emph{second} layer of the spatial MLP (Eq.~\ref{eq:mlp}) to zero, while the first layer retains its standard initialization. With this choice, $\mathbf{z}_{\text{spatial}} = \mathbf{0}$ at initialization, so $\mathbf{z}_{\text{time}} + \mathbf{z}_{\text{spatial}} = \mathbf{z}_{\text{time}}$ and Eq.~\ref{eq:adaln_ours} exactly recovers the pretrained $\gamma_{\text{orig}}, \beta_{\text{orig}}$ of Eq.~\ref{eq:adaln_orig} at training step~0. Training therefore begins from the exact pretrained behavior of the action head, and the spatial signal is incorporated only gradually as the second-layer parameters move away from zero through gradient updates.  Empirically, this zero-initialization strategy preserves the pretrained timestep conditioning at the start of fine-tuning and provides a stable starting point from which the action head learns to exploit the spatial signal.
+
+\subsection{Different Grounding Representation and Injection Variants Implementation Details}
+\label{supp:sec:subsec:grounding_variants}
+\newtcolorbox{promptbox}{
+  colback=gray!5,
+  colframe=gray!50,
+  boxrule=0.5pt,
+  arc=1mm,
+  left=2mm, right=2mm, top=1mm, bottom=1mm,
+  fontupper=\small\ttfamily,
+}
+\input{sections/appendix/assets/figures/pick_and_place_frame}
+In this subsection, we provide the implementation details of each variant evaluated in Sec.~\ref{sec:grounding_rep_inj}. In Fig.~\ref{fig:pick_and_place_frame}, we present an example demo showing the target’s 2D and 3D coordinates across two frames corresponding to reach-to-grasp and transport-to-place phases in a pick-and-place task. In the following paragraphs, we use these two frames from the demo to illustrate how each variant is implemented.
+
+\paragraph{2D via Text Prompt Variant.}
+For the 2D via Text Prompt variant, we append the 2D pixel coordinates to the language prompt. We experiment with two normalization schemes, scaling the coordinates to either $[0, 1]$ or $[0, 1000]$, and find that the former performs better. Therefore, all subsequent experiments adopt the $[0, 1]$ normalization, where coordinates are divided by the image width and height. For the reach-to-grasp phase, we use the following prompt:
+
+\begin{promptbox}
+Put the black bowl on the plate. Pick up the object at [0.51, 0.63].
+\end{promptbox}
+
+For the transport-to-place phase, we use the following prompt:
+\begin{promptbox}
+Put the black bowl on the plate. Place the object around [0.84, 0.66].
+\end{promptbox}
+
+\paragraph{2D via Visual Prompt Variant.}
+\input{sections/appendix/assets/figures/visual_prompt}
+For the 2D via Visual Prompt variant, we overlay a point marker on the target location in the input image. As shown in Fig.~\ref{fig:visual_prompt}, we use a cross-shaped marker, following the style of prior work~\cite{wang2026vp}, to indicate the target location. In the text prompt, we additionally append an instruction specifying that the model should pick up or place the object at the location indicated by the marker. For the reach-to-grasp phase, we use the following prompt:
+
+\begin{promptbox}
+Put the black bowl on the plate. Pick up the object indicated by the cross marker.
+\end{promptbox}
+
+For the transport-to-place phase, we use the following prompt:
+\begin{promptbox}
+Put the black bowl on the plate. Place the object around the location indicated by the cross marker.
+\end{promptbox}
+
+\paragraph{2D via AdaLN Variant.}
+For the 2D via AdaLN variant, we first project the gripper position into the third-person camera frame to obtain the gripper 2D position $(x_g, y_g)$. Given the target 2D position $(x_t, y_t)$, we encode the tuple $(x_t, y_t, x_t - x_g, y_t - y_g)$ with an MLP to produce an embedding, which is then injected through AdaLN. This variant is similar to our method, except that the grounding information is represented in 2D rather than 3D.
+
+\paragraph{3D via Text Prompt Variant.} 
+For the 3D via Text Prompt variant, we append the target 3D location in the robot base frame to the language prompt. For the reach-to-grasp phase, we use the following prompt:
+
+\begin{promptbox}
+Put the black bowl on the plate. Pick up the object at [-0.039, 0.006, 0.913].
+\end{promptbox}
+
+For the transport-to-place phase, we use the following prompt:
+\begin{promptbox}
+Put the black bowl on the plate. Place the object around [-0.003, 0.269, 0.909].
+\end{promptbox}

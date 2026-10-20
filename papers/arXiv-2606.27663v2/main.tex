@@ -1,0 +1,104 @@
+\documentclass{article}
+
+% \usepackage{corl_2026} % Use this for the initial submission.
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{wrapfig}
+\usepackage{longtable}
+\usepackage{booktabs}
+\usepackage[most]{tcolorbox}
+\setlength{\intextsep}{0pt}
+\usepackage[table]{xcolor}
+\usepackage{subcaption}
+\newcommand{\ychen}[1]{\textcolor{magenta}{[YC]: #1}}
+\newcommand\blfootnote[1]{%
+  \begingroup
+  \renewcommand\thefootnote{}\footnote{#1}%
+  \addtocounter{footnote}{-1}%
+  \endgroup}
+% \usepackage[final]{corl_2026} % Uncomment for the camera-ready ``final'' version.
+\usepackage[preprint]{corl_2026} % Uncomment for pre-prints (e.g., arxiv); This is like ``final'', but will remove the CORL footnote.
+
+% \title{A Grounded 3D Point In The Action Head Unlocks Spatial And Task Generalization}
+\title{Direct Action-Head Injection of A Grounded 3D Point Unlocks Spatial and Task Generalization}
+
+% The \author macro works with any number of authors. There are two
+% commands used to separate the names and addresses of multiple
+% authors: \And and \AND.
+%
+% Using \And between authors leaves it to LaTeX to determine where to
+% break the lines. Using \AND forces a line break at that point. So,
+% if LaTeX puts 3 of 4 authors names on the first line, and the last
+% on the second line, try using \AND instead of \And before the third
+% author name.
+
+% NOTE: authors will be visible only in the camera-ready and preprint versions (i.e., when using the option 'final' or 'preprint'). 
+% 	For the initial submission the authors will be anonymized.
+
+% \author{
+%   Jane E.~Doe\\
+%   Department of Electrical Engineering and Computer Sciences\\
+%   University of California Berkeley 
+%   United States\\
+%   \texttt{janedoe@berkeley.edu} \\
+%   %% examples of more authors
+%   %% \And
+%   %% Coauthor \\
+%   %% Affiliation \\
+%   %% Address \\
+%   %% \texttt{email} \\
+%   %% \AND
+%   %% Coauthor \\
+%   %% Affiliation \\
+%   %% Address \\
+%   %% \texttt{email} \\
+%   %% \And
+%   %% Coauthor \\
+%   %% Affiliation \\
+%   %% Address \\
+%   %% \texttt{email} \\
+%   %% \And
+%   %% Coauthor \\
+%   %% Affiliation \\
+%   %% Address \\
+%   %% \texttt{email} \\
+% }
+\author{
+    \textbf{Shiang-Feng Tsai}$^{1}$ \quad \textbf{Jin-Cheng Jhang}$^{1}$ \quad \textbf{Yen-Ling Tai}$^{2}$ \\[2pt] \quad \textbf{Jia-Hong Lai}$^{*1}$ \quad \textbf{Shih-Yun Wong}$^{*1}$ \quad \textbf{Kang-Tung Hsu}$^{*1}$ \quad \textbf{Yi-Ting Chen}$^{2}$ \quad \textbf{Min Sun}$^{1}$ \\[2pt]
+    $^{1}$National Tsing Hua University \quad $^{2}$National Yang Ming Chiao Tung University
+}
+
+
+\begin{document}
+\maketitle
+\blfootnote{$^{*}$Equal contribution.}
+%===============================================================================
+
+\input{sections/abstract}
+% Two or three meaningful keywords should be added here
+\keywords{Vision-Language-Action Models, Visual Grounding, Generalization} 
+
+%===============================================================================
+
+\input{sections/introduction}
+\input{sections/related_works}
+\input{sections/method}
+\input{sections/simulation_exps}
+\input{sections/real_world_exps}
+\input{sections/discussion_and_limitations}
+
+%===============================================================================
+
+\clearpage
+% The acknowledgments are automatically included only in the final and preprint versions of the paper.
+\acknowledgments{We thank the National Science and Technology Council (NSTC), Taiwan, for supporting this research under grant numbers NSTC 113-2221-E-007 -105 -MY3, NSTC 114-2634-F-002-004, and NSTC 115-2640-E-007-015. We further acknowledge the National Center for High-Performance Computing (NCHC), Taiwan, for access to its computing and storage facilities.}
+
+%===============================================================================
+
+% no \bibliographystyle is required, since the corl style is automatically used.
+\bibliography{main}  % .bib
+\input{sections/appendix}
+\end{document}

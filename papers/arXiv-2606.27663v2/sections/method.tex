@@ -1,0 +1,28 @@
+\section{Method}
+\input{assets/figures/overall_pipeline}
+We instantiate the two design choices: representing the grounding signal in 3D, and injecting it directly into the action head. Given a 2D target point—obtainable from any off-the-shelf grounding source—together with depth and camera parameters, we lift the point into 3D, encode the result into a spatial embedding via a two-layer MLP, and condition the action head on this embedding, with no changes to the VLA backbone or training objective. Fig.~\ref{fig:overall_pipeline} illustrates the overall pipeline.
+% argued for in Sec.~\ref{sec:introduction}
+ 
+\subsection{From 2D Target Point to 3D Spatial Embedding}
+Our method is applicable to tasks whose sub-goals can each be associated with a target object or region. In pick-and-place tasks, for instance, the reach-to-grasp sub-goal corresponds to the target object and the transport-to-place sub-goal to the placement region. Given a 2D target point indicating the current sub-goal, we lift it into 3D using the depth image and camera parameters to obtain the target position $\mathbf{p}_t \in \mathbb{R}^3$ in the robot base frame. We also obtain the current gripper position $\mathbf{p}_g \in \mathbb{R}^3$ from the robot state. We then compute their relative displacement:
+\begin{equation}
+    \mathbf{d} = \mathbf{p}_t - \mathbf{p}_g
+\end{equation}
+We encode this displacement into a spatial embedding via a two-layer MLP, whose output dimensionality matches the hidden size of the action head:
+\begin{equation}
+    \mathbf{z}_{\text{spatial}} = \operatorname{MLP}(\mathbf{d}).
+\end{equation}
+Despite its simplicity, $\mathbf{z}_\text{spatial}$ directly captures the task-relevant 3D geometric relationship between the target and the gripper---the information most pertinent to action prediction.
+ 
+\subsection{Inject Spatial Embedding into the VLA}
+ 
+% When designing the injection mechanism, we have two goals: to avoid disrupting the pretrained feature distribution of the VLM backbone, and to minimize architectural modifications. 
+Prior works~\cite{pointvla, falcon} have empirically shown that injecting 3D information exclusively into the action head preserves the pretrained VLM backbone features while improving spatial performance. These methods introduce auxiliary 3D encoders and projection modules whose outputs are added directly to the action tokens. Building on this insight, we likewise inject the 3D signal into the action head, but instead route it through the existing adaptive layer normalization (AdaLN) conditioning mechanism~\cite{DiT, perez2018film} already present in the Diffusion Transformer~\cite{DiT} (DiT) action head~\cite{li2024cogact, pi0, pi05, gr00tn1_2025, molmobot}, requiring no changes to the backbone. In the original AdaLN formulation, conditioning is performed solely on the timestep embedding $\mathbf{z}_\text{time}$. We extend this by combining $\mathbf{z}_\text{time}$ and $\mathbf{z}_\text{spatial}$ via element-wise addition before regressing the scale and shift parameters $\gamma$ and $\beta$:
+\begin{equation}
+    \gamma, \beta = \operatorname{Linear}(\mathbf{z}_\text{time} + \mathbf{z}_\text{spatial}).
+\end{equation}
+These parameters modulate the normalized features in each DiT block of the action head, allowing the policy to incorporate task-relevant 3D geometric information when predicting actions. 
+% The only addition to the original model is a single two-layer MLP; the VLM backbone and training objective remain unchanged.
+
+\subsection{Training and Inference}
+During both training and inference, we use a fixed off-the-shelf grounding source to provide the grounding information. The grounding signal is used solely as input to the MLP to obtain the spatial embedding $\mathbf{z}_\text{spatial}$. The proposed MLP is trained jointly and end-to-end with the VLA using the original flow-matching action loss, with no additional supervision or auxiliary objective.

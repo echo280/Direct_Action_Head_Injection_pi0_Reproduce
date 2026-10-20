@@ -1,0 +1,34 @@
+\definecolor{mygray}{HTML}{EFEFEF}
+\definecolor{myblue}{HTML}{EAF3FF}
+\definecolor{deltagreen}{HTML}{3A7D44}
+\definecolor{deltared}{HTML}{CC3333}
+
+\begin{table}[t]
+\centering
+\caption{\textbf{Real-world experiment results.} Both backbones collapse under Task and Position Perturbation, while our method restores most of the performance and outperforms other grounding-augmented variants. The best performance in each column is highlighted in bold.}
+
+\label{tab:real_exp}
+\resizebox{0.75\linewidth}{!}{
+\begin{tabular}{l ccc}
+\toprule
+\textbf{Method} & In Distribution & Task Perturbation & Position Perturbation \\
+\midrule
+
+% Open-Source VLA
+$\pi_{0.5}$~\cite{pi05} & 85.0 & 32.5 & 27.5 \\
+\rowcolor{myblue} $\pi_{0.5}$ + Ours & 91.3 & \textbf{78.8} & 61.3 \\
+\rowcolor{myblue} $\Delta$ & \textcolor{deltagreen}{\footnotesize{6.3 $\uparrow$}} & \textcolor{deltagreen}{\footnotesize{46.3 $\uparrow$}} & \textcolor{deltagreen}{\footnotesize{33.8 $\uparrow$}} \\
+\midrule
+GR00T-N1.6~\cite{gr00tn1_2025} & 68.8 & 3.8 & 3.8 \\
+\rowcolor{myblue} GR00T-N1.6 + Ours & \textbf{92.5} & 63.8 & \textbf{66.3} \\
+\rowcolor{myblue} $\Delta$ & \textcolor{deltagreen}{\footnotesize{23.7 $\uparrow$}} & \textcolor{deltagreen}{\footnotesize{60.0 $\uparrow$}} & \textcolor{deltagreen}{\footnotesize{62.5 $\uparrow$}} \\
+\midrule
+\rowcolor{mygray} \multicolumn{4}{l}{\textit{Controlled comparison of representation and injection}} \\
+\midrule
+GR00T-N1.6 + 2D via Text Prompt & 87.5 & 5.0 & 7.5 \\
+GR00T-N1.6 + 2D via Visual Prompt & 88.8 & 6.3 & 5.0 \\
+GR00T-N1.6 + 2D via AdaLN & 87.5 & 18.8 & 16.3 \\
+GR00T-N1.6 + 3D via Text Prompt & 86.3 & 5.0 & 5.0 \\
+\bottomrule
+\end{tabular}}
+\end{table}

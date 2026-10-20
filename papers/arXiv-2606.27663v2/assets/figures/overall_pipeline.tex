@@ -1,0 +1,6 @@
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{assets/figures/overall_pipeline_fig.pdf}
+\caption{\textbf{Overview of our proposed pipeline.} Given a task instruction, (1) any off-the-shelf visual grounding module localizes the task-relevant object as a 2D point in the image. (2) We lift this 2D point into 3D, compute its relative displacement to the gripper, and encode the displacement through a two-layer MLP into a spatial embedding. (3) The spatial embedding is injected directly into the flow-matching action head via AdaLN conditioning.}
+\label{fig:overall_pipeline}
+\end{figure}
