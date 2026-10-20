@@ -9,10 +9,12 @@
 
 1. 阅读 [交接说明](docs/handoff.md) 和 [验收状态](docs/validation.md)。
 2. 在 Linux NVIDIA GPU 机器上 clone 本仓库；不用接收数据或模型压缩包。
-3. 准备 `git` 和 `uv`，执行环境安装及小测试。先回传 `runs/reports/` 和小测试日志，再安排长时间训练。
+3. 按 [交接说明](docs/handoff.md) 准备 `git` 和 `uv`，执行环境安装、小检查、数据准备、两组训练和 ID 评估。每一步都有具体脚本、命令和输出位置；通过后直接继续，失败时回传对应日志。
 4. 数据、权重均有下载脚本。所有运行输出都在本仓库相对目录 `runs/` 下。
 
 ```bash
+source scripts/env.sh
+set -euo pipefail
 bash scripts/setup.sh
 bash scripts/setup_simulator.sh
 bash scripts/smoke_test.sh 2>&1 | tee runs/logs/smoke.log
@@ -69,13 +71,13 @@ bash scripts/train_spatial.sh --repo-id local/pi05_3d_69 --fsdp-devices 1
 恢复训练给原命令加 `--resume`；新实验使用新的 `--exp-name`。
 没有自动启用覆盖旧 checkpoint。
 
-确认小测试和数据检查通过后，可顺序执行准备与两组训练：
+对于尚未产生重放/转换输出的新工作目录，也可用总入口代替上面的分步安装、数据准备和训练命令：
 
 ```bash
 bash scripts/run_all.sh 69 1
 ```
 
-第二个数字是 FSDP 设备数。该入口不是“完整论文复现一键通过”：训练结束后仍需评估。
+第二个数字是 FSDP 设备数。总入口包含 smoke，但不包含交接说明中的额外 JAX GPU 断言；首次机器验收建议分步执行。该入口训练结束后仍需评估，不要在已完成数据准备的目录中再次从头运行。
 任一步失败会停止，退出码和阶段名写入 `runs/reports/`，完整日志写入 `runs/logs/`。
 
 ## 评估和回传
