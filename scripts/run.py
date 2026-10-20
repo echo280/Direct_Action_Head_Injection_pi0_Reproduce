@@ -49,7 +49,9 @@ def main():
         from openpi.policies.policy_config import create_trained_policy
         from openpi.serving.websocket_policy_server import WebsocketPolicyServer
         policy = create_trained_policy(config, args.checkpoint)
-        WebsocketPolicyServer(policy=policy, host="0.0.0.0", port=args.port, metadata=policy.metadata).serve_forever()
+        metadata = dict(policy.metadata, reproduction_variant=args.variant,
+                        reproduction_checkpoint=str(Path(args.checkpoint).resolve()))
+        WebsocketPolicyServer(policy=policy, host="0.0.0.0", port=args.port, metadata=metadata).serve_forever()
         return
     script = OPENPI / "scripts" / ("train.py" if args.mode == "train" else "compute_norm_stats.py")
     spec = importlib.util.spec_from_file_location("handoff_official_" + args.mode, script)

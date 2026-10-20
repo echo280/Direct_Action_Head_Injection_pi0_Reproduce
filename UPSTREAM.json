@@ -7,6 +7,12 @@
     "url": "https://github.com/Lifelong-Robot-Learning/LIBERO",
     "commit": "f78abd68ee283de9f9be3c8f7e2a9ad60246e95c"
   },
+  "libero_pro": {
+    "url": "https://github.com/Zxy-MLlab/LIBERO-PRO",
+    "commit": "eafdb809426b13153aa1e4c42d6601844217dfec",
+    "dataset": "zhouxueyang/LIBERO-Pro",
+    "dataset_revision": "c86fc3b8293185a6f373677018ff3e37f8391602"
+  },
   "paper": "arXiv:2606.27663v2",
   "created": "2026-10-20",
   "status": "independent implementation; not GPU-validated; no claimed benchmark results"

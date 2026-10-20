@@ -1,4 +1,4 @@
-"""Oracle geometry used by replay and ID rollout. Requires the simulator environment."""
+"""Oracle geometry used by replay and ID/OOD rollout. Requires the simulator environment."""
 import numpy as np
 from common import simulator_setup
 
@@ -16,11 +16,9 @@ def make_env(bddl):
 
 
 def goal_pair(env):
-    goals = env.env.parsed_problem["goal_state"]
-    pairs = [goal for goal in goals if len(goal) == 3 and goal[0].lower() in ("on", "in")]
-    if len(pairs) != 1:
-        raise ValueError(f"Expected one grasp/place goal, got {goals}")
-    return pairs[0][1], pairs[0][2]
+    from evaluation_protocol import task_semantics
+    _, source, placement = task_semantics(env)
+    return source, placement
 
 
 def world_to_base(env):

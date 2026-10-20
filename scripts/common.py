@@ -18,7 +18,7 @@ def setup():
         "OPENPI_DATA_HOME": RUNS / "weights",
         "UV_CACHE_DIR": RUNS / "cache/uv",
         "WANDB_DIR": RUNS / "logs/wandb",
-        "LIBERO_CONFIG_PATH": RUNS / "cache/libero_config",
+        "LIBERO_CONFIG_PATH": RUNS / "cache" / ("libero_pro_config" if os.environ.get("PI05_LIBERO_BACKEND") == "libero_pro" else "libero_config"),
     }
     for key, path in paths.items():
         path.mkdir(parents=True, exist_ok=True)
@@ -31,13 +31,17 @@ def setup():
 def simulator_setup():
     setup()
     import json
-    libero = RUNS / "cache/LIBERO"
+    backend = os.environ.get("PI05_LIBERO_BACKEND", "libero")
+    if backend not in ("libero", "libero_pro"):
+        raise ValueError(f"Unsupported simulator backend: {backend}")
+    libero = RUNS / "cache" / ("LIBERO-PRO" if backend == "libero_pro" else "LIBERO")
     if not (libero / "libero/libero/envs").is_dir():
-        raise FileNotFoundError("Run bash scripts/setup_simulator.sh first")
+        raise FileNotFoundError("Run bash scripts/setup_simulator.sh and scripts/setup_ood.sh first")
     sys.path.insert(0, str(libero))
     base = libero / "libero/libero"
-    paths = {"benchmark_root": base, "bddl_files": base / "bddl_files",
-             "init_states": base / "init_files", "assets": base / "assets",
+    tasks = RUNS / "data/libero_pro" if backend == "libero_pro" else base
+    paths = {"benchmark_root": base, "bddl_files": tasks / "bddl_files",
+             "init_states": tasks / "init_files", "assets": base / "assets",
              "datasets": RUNS / "data/raw"}
     # JSON string quoting is valid YAML and handles spaces in project paths.
     text = "\n".join(f"{key}: {json.dumps(str(value))}" for key, value in paths.items())

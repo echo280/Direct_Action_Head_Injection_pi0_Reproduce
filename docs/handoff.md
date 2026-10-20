@@ -2,7 +2,7 @@
 
 目标：在同一份 LIBERO 数据上，从同一个 `pi05_base` 权重分别训练 π0.5 baseline 和加入三维位移条件的 spatial 模型，再比较评估结果。仓库名保留了 `pi0`，实际使用的是 **π0.5**。
 
-**当前是待 GPU 验收的工程初版。数据重放、真实权重加载、训练和仿真评估均未在本地跑通；目前提供普通 LIBERO 的 ID（原始任务分布）评估入口，论文需要的 LIBERO-PRO Task/Position OOD（分布外扰动）评估尚未实现。** 下面给出的是实际已有入口，不能把跑完这些命令等同于论文完整复现。
+**当前是待 GPU 验收的工程初版。数据重放、真实权重加载、训练和仿真评估均未在本地跑通；已经提供普通 LIBERO 的 ID（原始任务分布）和官方 LIBERO-PRO Task/Position OOD（分布外扰动）评估入口。** 代码实现和单元测试不等于真实仿真通过，也不能据此声称已达到论文指标。
 
 ## 1. 执行顺序和脚本位置
 
@@ -15,10 +15,13 @@
 | 小检查（smoke） | [`scripts/smoke_test.sh`](../scripts/smoke_test.sh) | 运行几何单元测试和小模型接口检查 |
 | 下载基座权重 | [`scripts/download.py`](../scripts/download.py) 的 `weights` 命令 | 下载 `pi05_base` |
 | 数据准备 | [`scripts/prepare_data.sh`](../scripts/prepare_data.sh) | 下载数据 → 仿真重放/生成三维位移 → 转为 LeRobot → 计算两组归一化统计 |
+| OOD 资源 | [`scripts/setup_ood.sh`](../scripts/setup_ood.sh) | 下载固定版本官方 LIBERO-PRO 代码和四个 OOD suite 的 BDDL/初始状态 |
 | baseline 训练 | [`scripts/train_baseline.sh`](../scripts/train_baseline.sh) | 不使用空间条件的对照组 |
 | spatial 训练 | [`scripts/train_spatial.sh`](../scripts/train_spatial.sh) | 使用三维位移条件的实验组 |
 | 策略服务 | [`scripts/run.py`](../scripts/run.py) 的 `serve` 命令 | 加载训练 checkpoint，接收模拟器观测并输出动作 |
-| ID 评估 | [`scripts/evaluate.py`](../scripts/evaluate.py) | 连接策略服务，运行 LIBERO Object/Spatial 回合 |
+| 单项评估 | [`scripts/evaluate.py`](../scripts/evaluate.py) | 连接策略服务，选择 ID / Task / Position 和 Object / Spatial |
+| 完整评估 | [`scripts/evaluate_all.sh`](../scripts/evaluate_all.sh) | 对一个已启动的模型服务顺序评估六项，共 3,000 回合 |
+| 配对汇总 | [`scripts/summarize_evaluation.py`](../scripts/summarize_evaluation.py) | 两组均完成后校验配对，生成成功率对照表 |
 
 除首次 clone 外，下文命令都在**仓库根目录的 Linux Bash 终端**运行。无需手动激活 conda/venv；命令已经指定对应环境的 Python。每次打开新终端，都先进入仓库并运行 `source scripts/env.sh`。下载、缓存、项目虚拟环境、checkpoint、日志和指标统一放在仓库相对目录 `runs/` 中。
 
@@ -71,7 +74,7 @@ bash scripts/smoke_test.sh 2>&1 | tee runs/logs/smoke.log
 - 仿真环境：`runs/env/simulator/`。依赖在 [`configs/requirements_sim.txt`](../configs/requirements_sim.txt)，LIBERO 源码放在 `runs/cache/LIBERO/`。两个环境分开，避免训练依赖与旧版仿真依赖冲突。
 - 环境报告：`runs/reports/environment.json`；仿真依赖实际版本：`runs/reports/simulator_requirements_resolved.txt`。
 
-**smoke 具体在哪里、检查什么？** `scripts/smoke_test.sh` 依次运行 [`tests/test_geometry.py`](../tests/test_geometry.py) 和 [`scripts/smoke_model.py`](../scripts/smoke_model.py)。前者检查几何计算、阶段切换和缓存对齐；后者用随机初始化的小模型检查空间分支零初始化、梯度、原时间条件/初始 loss 一致，以及缺失空间输入会报错。
+**smoke 具体在哪里、检查什么？** `scripts/smoke_test.sh` 先发现并运行 `tests/` 下的单元测试，包括 [`tests/test_geometry.py`](../tests/test_geometry.py) 的几何/缓存检查和 [`tests/test_evaluation_protocol.py`](../tests/test_evaluation_protocol.py) 的 OOD 指令、目标、资源、配对检查，再运行 [`scripts/smoke_model.py`](../scripts/smoke_model.py)，用随机初始化的小模型检查空间分支零初始化、梯度、原时间条件/初始 loss 一致，以及缺失空间输入会报错。
 
 通过时命令退出码为 0，且 `runs/reports/model_smoke.json` 中有 `"status": "passed"`。这一步不下载预训练权重，不进行正式训练，也不验证 MuJoCo 渲染。EDT 单元测试在缺少 scipy 时会跳过；正式仿真环境仍需要完整依赖。
 
@@ -91,6 +94,7 @@ runs/env/openpi/bin/python -c 'import jax; devices = jax.devices(); print(device
 source scripts/env.sh
 set -euo pipefail
 "$UV_PROJECT_ENVIRONMENT/bin/python" scripts/download.py weights 2>&1 | tee runs/logs/download_weights.log
+bash scripts/setup_ood.sh 2>&1 | tee runs/logs/setup_ood.log
 bash scripts/prepare_data.sh 69 2>&1 | tee runs/logs/prepare_data_69.log
 ```
 
@@ -113,6 +117,8 @@ runs/env/simulator/bin/python scripts/replay_dataset.py --scale 69
 | 重放后的逐演示 NPZ | `runs/data/replayed_69/` |
 | LeRobot 训练数据 | `runs/data/lerobot/local/pi05_3d_69/` |
 | 三维位移缓存及元信息 | `runs/data/geometry/local/pi05_3d_69/cache.npz` 和 `cache.json` |
+| OOD 仿真源码 | `runs/cache/LIBERO-PRO/` |
+| OOD BDDL 和配套初始状态 | `runs/data/libero_pro/bddl_files/`、`runs/data/libero_pro/init_files/` |
 | 两组归一化统计 | `runs/assets/pi05_3d_baseline/`、`runs/assets/pi05_3d_spatial/` 下对应数据集目录 |
 | 下载/转换记录 | `runs/reports/download_weights.json`、`download_data.json`、`data_conversion.json` |
 
@@ -143,7 +149,7 @@ bash scripts/train_spatial.sh --repo-id local/pi05_3d_69 --fsdp-devices 1 2>&1 |
 
 30,000 steps 的最后保存目录通常为 `29999`，评估前以实际目录为准。训练中断后，在原训练命令中加 `--resume` 恢复；新实验加 `--exp-name 新名称`，使用新的日志文件名。恢复时继续使用原来的数据、配置和实验名。
 
-## 6. 训练后进行 ID 评估：两个终端
+## 6. 训练后进行 ID / Task / Position 评估：两个终端
 
 服务端负责模型推理，客户端负责模拟器回合；两者在同一台机器上，通过端口 8000 通信。两个终端都先进入仓库根目录。以下 checkpoint 路径中的 `29999` 要替换为实际保存的步目录。
 
@@ -157,18 +163,15 @@ runs/env/openpi/bin/python scripts/run.py serve baseline --repo-id local/pi05_3d
   2>&1 | tee runs/logs/serve_baseline.log
 ```
 
-**终端 B 等服务启动并监听端口后执行：**
+**终端 B 等服务启动并监听端口后执行完整 baseline 评估：**
 
 ```bash
 source scripts/env.sh
 set -euo pipefail
-runs/env/simulator/bin/python scripts/evaluate.py --variant baseline --suite libero_object --trials 50 --port 8000 \
-  2>&1 | tee runs/logs/eval_baseline_object.log
-runs/env/simulator/bin/python scripts/evaluate.py --variant baseline --suite libero_spatial --trials 50 --port 8000 \
-  2>&1 | tee runs/logs/eval_baseline_spatial.log
+bash scripts/evaluate_all.sh baseline 8000 paper_seed42 2>&1 | tee runs/logs/eval_baseline_all.log
 ```
 
-**baseline 两项完成后，在终端 A 按 Ctrl+C 停止旧服务，再启动 spatial 服务：**
+**baseline 六项完成后，在终端 A 按 Ctrl+C 停止旧服务，再启动 spatial 服务：**
 
 如果终端因启用了 `set -e` 而退出，重新打开终端并进入仓库，再执行下面的命令。
 
@@ -185,17 +188,17 @@ runs/env/openpi/bin/python scripts/run.py serve spatial --repo-id local/pi05_3d_
 ```bash
 source scripts/env.sh
 set -euo pipefail
-runs/env/simulator/bin/python scripts/evaluate.py --variant spatial --suite libero_object --trials 50 --port 8000 \
-  2>&1 | tee runs/logs/eval_spatial_object.log
-runs/env/simulator/bin/python scripts/evaluate.py --variant spatial --suite libero_spatial --trials 50 --port 8000 \
-  2>&1 | tee runs/logs/eval_spatial_spatial.log
+bash scripts/evaluate_all.sh spatial 8000 paper_seed42 2>&1 | tee runs/logs/eval_spatial_all.log
+runs/env/simulator/bin/python scripts/summarize_evaluation.py --run-name paper_seed42
 ```
 
-**服务端 checkpoint 与客户端 `--variant` 必须一致。** 每个 suite 有 10 个任务，每任务 50 回合，即每个模型共 1,000 个 ID 回合。两组默认使用相同初始状态和 seed。
+**服务端 checkpoint 与客户端 `--variant` 必须一致，客户端会检查服务端组别元数据。** 每个条件、每个 suite 有 10 个任务，每任务 50 回合，即每个模型 ID 1,000 + Task 1,000 + Position 1,000 = 3,000 回合；两组共 6,000 回合。两组使用相同初始状态索引和 seed。更新代码后需重启旧服务，确保其发送新的组别元数据。
 
-结果在 `runs/evaluation/`，例如 `baseline_libero_object_id.jsonl` 保存逐回合记录，`baseline_libero_object_id.summary.json` 保存成功率及错误数；其他三项命名对应替换。检查 summary 的 `errors` 是否为 0；推理/仿真错误不能直接解释为模型能力差。已有同名 JSONL 时程序会拒绝混写，重新评估前先归档原结果。
+结果在 `runs/evaluation/paper_seed42/`，例如 `baseline_libero_object_task.jsonl` 保存 Task 逐回合记录，同名 `.summary.json` 保存成功率及错误数，`.metadata.json` 保存协议、提交号和 checkpoint。检查 summary 的 `errors` 是否为 0；推理/仿真错误不能直接解释为模型能力差。汇总成功后有 `comparison.csv` 和 `comparison.json`，包含 ID/Task/Position 的 Object、Spatial、Avg。已有结果不会自动覆盖，重复实验用新 run-name。
 
-这些命令只做 ID。**不能通过加 `--condition task` 或 `--condition position` 获得论文 OOD 结果，目前这两个选项会报未实现。** 完整论文复现仍需补齐并验证 LIBERO-PRO 适配，见 [评估协议](evaluation_protocol.md)。
+首次仿真验收建议先运行 [评估协议第 3 节](evaluation_protocol.md#3-首次先验收少量真实-ood-回合) 的四个小规模 OOD 回合，再运行上面的完整评估。小规模结果会标记为 `partial_acceptance`，不能用于正式汇总。
+
+Task 使用官方 `_task` suite，实际指令和抓放对象从扰动 BDDL 读取；Position 使用官方 `_swap` suite 和对应初始状态。固定来源和参数见 [`configs/evaluation.json`](../configs/evaluation.json)。作者未公开精确 benchmark commit 与全部控制细节，本版固定公开版本并记录这些复现选择；真实相机几何和仿真兼容性仍须验收。
 
 ## 7. 已理解步骤后，如何少敲命令
 
@@ -205,7 +208,7 @@ runs/env/simulator/bin/python scripts/evaluate.py --variant spatial --suite libe
 bash scripts/run_all.sh 69 1
 ```
 
-它依次安装两套环境、运行 smoke、下载权重、准备数据、训练 baseline、训练 spatial，任一步失败就停止。第二个数字是 FSDP 设备数。它**不包含第 3 节额外的 JAX GPU 断言，也不包含第 6 节评估**；首次机器验收建议按分步命令确认 GPU 可用。不要在已经完成数据准备后再从头运行总入口。
+它依次安装两套环境、准备 OOD 资源、运行 smoke、下载权重、准备数据、训练 baseline、训练 spatial，任一步失败就停止。第二个数字是 FSDP 设备数。它**不包含第 3 节额外的 JAX GPU 断言，也不包含第 6 节评估**；首次机器验收建议按分步命令确认 GPU 可用。不要在已经完成数据准备后再从头运行总入口。
 
 总日志为 `runs/logs/pipeline_<UTC时间>.log`；阶段和退出码为 `runs/reports/pipeline_<UTC时间>.status`。训练完成后按第 6 节评估。现阶段可以减少手工命令，但还不能称为“一条命令完成论文所有实验”。
 

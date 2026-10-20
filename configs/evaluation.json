@@ -1,0 +1,18 @@
+{
+  "libero_pro": {
+    "url": "https://github.com/Zxy-MLlab/LIBERO-PRO.git",
+    "commit": "eafdb809426b13153aa1e4c42d6601844217dfec",
+    "dataset": "zhouxueyang/LIBERO-Pro",
+    "dataset_revision": "c86fc3b8293185a6f373677018ff3e37f8391602"
+  },
+  "conditions": {"id": "", "task": "_task", "position": "_swap"},
+  "suites": {
+    "libero_object": {"tasks": 10, "max_steps": 280},
+    "libero_spatial": {"tasks": 10, "max_steps": 220}
+  },
+  "trials": 50,
+  "replan_steps": 5,
+  "settle_steps": 10,
+  "seed": 7,
+  "note": "Pinned official pre-generated PRO tasks/states. Exact target-paper commit and rollout controls were not published; these are explicit reproduction choices, not claimed author settings."
+}

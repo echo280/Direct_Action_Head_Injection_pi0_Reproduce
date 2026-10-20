@@ -1,20 +1,35 @@
 {
   "date": "2026-10-20",
-  "parsed_python_files": 106,
+  "parsed_python_files": 110,
   "syntax_errors": [],
   "unit_test_returncode": 0,
-  "unit_test_output": "test_depth_axes_and_rigid_transform (test_geometry.GeometryTests.test_depth_axes_and_rigid_transform) ... ok\ntest_invalid_depth_and_pixel_rejected (test_geometry.GeometryTests.test_invalid_depth_and_pixel_rejected) ... ok\ntest_invalid_extrinsic_rejected (test_geometry.GeometryTests.test_invalid_extrinsic_rejected) ... ok\ntest_mask_interior (test_geometry.GeometryTests.test_mask_interior) ... skipped 'scipy unavailable locally; run on simulator host'\ntest_object_height_switch_strict_and_latched (test_geometry.GeometryTests.test_object_height_switch_strict_and_latched) ... ok\ntest_sidecar_alignment_and_dataset_fingerprint (test_geometry.GeometryTests.test_sidecar_alignment_and_dataset_fingerprint) ... ok\n\n----------------------------------------------------------------------\nRan 6 tests in 0.392s\n\nOK (skipped=1)\n",
+  "unit_test_output": "test_backends_use_separate_source_config_and_asset_paths (test_evaluation_protocol.EvaluationProtocolTests.test_backends_use_separate_source_config_and_asset_paths) ... ok\ntest_baseline_receives_same_new_instruction_without_spatial_signal (test_evaluation_protocol.EvaluationProtocolTests.test_baseline_receives_same_new_instruction_without_spatial_signal) ... ok\ntest_instruction_and_goal_come_from_bddl (test_evaluation_protocol.EvaluationProtocolTests.test_instruction_and_goal_come_from_bddl) ... ok\ntest_manifest_rejects_missing_changed_or_wrong_revision_assets (test_evaluation_protocol.EvaluationProtocolTests.test_manifest_rejects_missing_changed_or_wrong_revision_assets) ... ok\ntest_registry_requires_all_four_suites_and_ten_tasks_each (test_evaluation_protocol.EvaluationProtocolTests.test_registry_requires_all_four_suites_and_ten_tasks_each) ... ok\ntest_result_table_rejects_partial_error_or_unpaired_inputs (test_evaluation_protocol.EvaluationProtocolTests.test_result_table_rejects_partial_error_or_unpaired_inputs) ... ok\ntest_rollout_uses_new_instruction_target_and_phase_switch (test_evaluation_protocol.EvaluationProtocolTests.test_rollout_uses_new_instruction_target_and_phase_switch) ... ok\ntest_task_and_position_use_distinct_official_suites (test_evaluation_protocol.EvaluationProtocolTests.test_task_and_position_use_distinct_official_suites) ... ok\ntest_depth_axes_and_rigid_transform (test_geometry.GeometryTests.test_depth_axes_and_rigid_transform) ... ok\ntest_invalid_depth_and_pixel_rejected (test_geometry.GeometryTests.test_invalid_depth_and_pixel_rejected) ... ok\ntest_invalid_extrinsic_rejected (test_geometry.GeometryTests.test_invalid_extrinsic_rejected) ... ok\ntest_mask_interior (test_geometry.GeometryTests.test_mask_interior) ... skipped 'scipy unavailable locally; run on simulator host'\ntest_object_height_switch_strict_and_latched (test_geometry.GeometryTests.test_object_height_switch_strict_and_latched) ... ok\ntest_sidecar_alignment_and_dataset_fingerprint (test_geometry.GeometryTests.test_sidecar_alignment_and_dataset_fingerprint) ... ok\n\n----------------------------------------------------------------------\nRan 14 tests in 0.467s\n\nOK (skipped=1)\n",
   "not_executed": [
     "JAX model smoke",
     "GPU dependency installation",
     "pretrained weights",
     "MuJoCo replay",
     "training",
-    "rollout"
+    "ID/Task/Position simulator rollouts",
+    "full OOD asset download on target Linux machine"
   ],
   "task_counts": {
     "20": 20,
     "69": 69
   },
-  "bash_syntax": "passed for all 8 shell scripts"
+  "bash_syntax": "passed for all 10 shell scripts",
+  "documentation_checks": {
+    "bash_examples": 28,
+    "local_links": 32
+  },
+  "ood_static_validation": {
+    "official_suites": 4,
+    "official_task_definitions": 40,
+    "registered_bddl_and_init_paths": 80,
+    "all_paths_present_in_pinned_dataset": true,
+    "dataset_revision": "c86fc3b8293185a6f373677018ff3e37f8391602",
+    "official_bddl_spot_check": "alphabet-soup-named Task asset changes language and source goal to cream cheese; Position asset retains alphabet soup and swaps initialization regions",
+    "scope": "official registry/file-list and BDDL text inspected; no simulator execution"
+  },
+  "cli_help": "evaluate.py, prepare_ood.py, summarize_evaluation.py passed"
 }

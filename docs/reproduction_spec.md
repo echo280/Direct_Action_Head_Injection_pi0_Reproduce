@@ -29,10 +29,11 @@
 - 保留官方默认 EMA 0.999，默认全量参数微调；论文冻结策略未完整报告。
 - 数据加载 workers=0 便于首次排错，与性能优化无关；后续调整应两组一致。
 - ID rollout 默认 replan 5 步，阶段变化时清空旧 chunk；论文没有给出这些控制细节。
+- Task/Position 使用固定版本官方 LIBERO-PRO 的 `_task` / `_swap` suite 和配套预生成状态；作者未公开精确 benchmark commit、资源 revision 及全部 rollout 参数，本版显式记录于 `configs/evaluation.json`，仍需远端验证。
 
 ## 尚未完成
 
-- LIBERO-PRO Task/Position 官方环境适配与完整评估。
+- LIBERO-PRO Task/Position 的真实仿真验收与完整评估结果（代码入口已接入）。
 - 真机 Qwen 定位、真实物体高度跟踪、机器人控制。
 - 论文的全部消融、深度/定位噪声实验、多 seed 统计。
 

@@ -3,13 +3,13 @@
 独立实现论文 [arXiv:2606.27663v2](https://arxiv.org/abs/2606.27663v2) 的三维位移条件分支。
 这不是作者官方实现，也不是已经达到论文指标的模型。
 
-**当前状态：工程初版。核心注入、数据重放/转换、训练和 ID 评估代码已编写；本地未安装 JAX/CUDA/MuJoCo，尚未完成 GPU、重放或 rollout 验收。LIBERO-PRO 的 Task/Position 扰动适配未完成，不能声称已完整复现论文。**
+**当前状态：工程初版。核心注入、数据重放/转换、训练及 ID / LIBERO-PRO Task / Position 评估入口已编写；本地未安装 JAX/CUDA/MuJoCo，尚未完成 GPU、重放或 rollout 验收，也没有论文指标结果。**
 
 ## 同学接手后先做什么
 
 1. 阅读 [交接说明](docs/handoff.md) 和 [验收状态](docs/validation.md)。
 2. 在 Linux NVIDIA GPU 机器上 clone 本仓库；不用接收数据或模型压缩包。
-3. 按 [交接说明](docs/handoff.md) 准备 `git` 和 `uv`，执行环境安装、小检查、数据准备、两组训练和 ID 评估。每一步都有具体脚本、命令和输出位置；通过后直接继续，失败时回传对应日志。
+3. 按 [交接说明](docs/handoff.md) 准备 `git` 和 `uv`，执行环境安装、小检查、数据准备、两组训练和 ID/OOD 评估。每一步都有具体脚本、命令和输出位置；通过后直接继续，失败时回传对应日志。
 4. 数据、权重均有下载脚本。所有运行输出都在本仓库相对目录 `runs/` 下。
 
 ```bash
@@ -30,6 +30,7 @@ bash scripts/smoke_test.sh 2>&1 | tee runs/logs/smoke.log
 source scripts/env.sh
 "$UV_PROJECT_ENVIRONMENT/bin/python" scripts/download.py weights
 "$UV_PROJECT_ENVIRONMENT/bin/python" scripts/download.py data --scale 69
+bash scripts/setup_ood.sh
 ```
 
 权重使用 `pi05_base`，不使用已经微调过的 `pi05_libero` 作为主实验初始化。
@@ -83,8 +84,8 @@ bash scripts/run_all.sh 69 1
 ## 评估和回传
 
 训练结果、日志、环境报告、下载记录均保存在 [runs/](runs/README.md)。
-ID 策略服务和 rollout 示例见 [评估协议](docs/evaluation_protocol.md)。
-**Task/Position 两种 OOD 评估适配尚未完成，程序会明确拒绝，而不是运行 ID 冒充 OOD。**
+ID/Task/Position 策略服务、少量真实回合验收和完整评估命令见 [评估协议](docs/evaluation_protocol.md)。
+启动对应模型服务后，运行 `bash scripts/evaluate_all.sh baseline` 或 `bash scripts/evaluate_all.sh spatial`；每组评估六项、共 3,000 回合。两组完成后运行 `runs/env/simulator/bin/python scripts/summarize_evaluation.py` 生成配对对照表。真实仿真兼容性仍需验收。
 
 你可以把 `runs/reports/`、`runs/logs/`、`runs/evaluation/` 回传给项目负责人；这些目录默认不进 Git。
 如果需要一个方便回传的结果 ZIP，可选执行：
@@ -101,6 +102,7 @@ runs/env/openpi/bin/python scripts/package_results.py
 
 - OpenPI 固定 commit：`215abfb217dbac7d5f1273282331b9b1866c0479`。
 - LIBERO 固定 commit：`f78abd68ee283de9f9be3c8f7e2a9ad60246e95c`。
+- LIBERO-PRO 固定 commit：`eafdb809426b13153aa1e4c42d6601844217dfec`；官方预生成评估文件的固定 revision 见 `configs/evaluation.json`。
 - 完整来源：`UPSTREAM.json`；对上游 6 个文件的修改：`docs/openpi_changes.patch`。
 - 上游 OpenPI 原始 Apache 2.0 和 Gemma 许可证保留在 `openpi/`；论文源文件属于原作者。
 - 阅读笔记见 `papers/reading_notes_v2.md`，实现选择与论文未报告内容见 [差异清单](docs/reproduction_spec.md)。
